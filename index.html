@@ -465,6 +465,9 @@ footer strong{color:var(--red);}
 
       <!-- Buttons -->
       <div style="display:flex;flex-direction:column;gap:8px;">
+        <button id="tg-test" onclick="tgTest()" style="width:100%;background:transparent;border:1px solid var(--a2);color:var(--a2);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:11px;border-radius:3px;cursor:pointer;transition:all .2s;">
+          🔔 ENVIAR MENSAJE DE PRUEBA
+        </button>
         <button id="tg-toggle" onclick="toggleTgScan()" style="width:100%;background:transparent;border:1px solid var(--a);color:var(--a);font-family:var(--head);font-size:13px;letter-spacing:3px;padding:13px;border-radius:3px;cursor:pointer;transition:all .2s;">
           ▶ INICIAR ESCANEO AUTO
         </button>
@@ -2010,10 +2013,10 @@ function toggleTgScan(){
     tgSend('⏸ APEX SIGNALS — Escaneo automático pausado.');
   }else{
     if(btn){ btn.textContent='⏸ PAUSAR ESCANEO'; btn.style.borderColor='var(--red)'; btn.style.color='var(--red)'; }
-    tgSend('🚀 APEX SIGNALS activado!\n\nEscaneando BTC, ETH y SOL cada hora.\nTe avisaré cuando haya una señal de élite que pase los 14 criterios.\n\n⚙️ Criterios: Score ≥ 7/14 · R/B ≥ 1:2.5 · 5+ confluencias');
-    tgAutoScan(); // scan immediately
+    tgSend('🚀 <b>APEX SIGNALS activado!</b>\n\nEscaneando BTC, ETH y SOL cada hora.\nTe avisaré cuando haya una señal de élite que pase los 14 criterios.\n\n⚙️ Criterios: Score ≥ 7/14 · R/B ≥ 1:2.5 · 5+ confluencias');
+    tgAutoScan();
     tgNextScan = new Date(Date.now() + 3600000);
-    tgScanTimer = setInterval(tgAutoScan, 3600000); // every hour
+    tgScanTimer = setInterval(tgAutoScan, 3600000);
     updateTgUI();
   }
 }
@@ -2022,9 +2025,26 @@ function toggleTgScan(){
 async function tgScanNow(){
   const btn = document.getElementById('tg-now');
   if(btn){ btn.disabled=true; btn.textContent='Escaneando...'; }
+  // Send confirmation that scan started
+  await tgSend('🔍 <b>Escaneo manual iniciado</b>\n\nAnalizando BTC, ETH y SOL ahora mismo...');
   await tgAutoScan();
+  await tgSend(`✅ <b>Escaneo completado</b>\n\n📊 Escaneos totales: ${tgScanCount}\nBTC: $${live.BTC?.price?.toLocaleString('en-US',{maximumFractionDigits:0})||'—'} · ETH: $${live.ETH?.price?.toFixed(0)||'—'} · SOL: $${live.SOL?.price?.toFixed(2)||'—'}\n\n${tgSignalCount > 0 ? '🎯 Señal encontrada y enviada arriba ↑' : '⏳ Sin señal de élite en este momento. Mercado sin confluencia suficiente.'}`);
   if(btn){ btn.disabled=false; btn.textContent='⚡ ESCANEAR AHORA'; }
 }
+
+// Test Telegram connection
+async function tgTest(){
+  const btn = document.getElementById('tg-test');
+  if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
+  const btcP = live.BTC?.price ? '$'+live.BTC.price.toLocaleString('en-US',{maximumFractionDigits:0}) : 'cargando...';
+  const result = await tgSend(`🔔 <b>APEX SIGNALS — Prueba de conexión</b>\n\n✅ Bot conectado correctamente\n📡 BTC en vivo: ${btcP}\n⏰ ${new Date().toLocaleString('es-ES')}\n\n¡Tu sistema de alertas está listo!`);
+  if(btn){ btn.disabled=false; btn.textContent='🔔 ENVIAR MENSAJE DE PRUEBA'; }
+  // Show result in UI
+  const statusEl = document.getElementById('tg-status');
+  if(statusEl){ statusEl.textContent='✅ MENSAJE ENVIADO'; statusEl.style.color='var(--long)'; }
+  setTimeout(()=>{ if(statusEl){ statusEl.textContent='⏸ INACTIVO'; statusEl.style.color='var(--txd)'; } }, 3000);
+}
+
 
 </script>
 </body>
