@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX SIGNALS v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;600;700&family=Chakra+Petch:wght@300;400;600;700;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020810;--s1:#060e1a;--s2:#0a1624;
+  --bd:#152840;--bd2:#0c1e30;
+  --a:#00e5ff;--a2:#00ff9d;--a3:#7c5cff;
+  --red:#ff3050;--yel:#ffb300;--gold:#ffd060;
+  --tx:#aac8e0;--txd:#3a5a78;--txb:#d8eeff;
+  --long:#00ff9d;--short:#ff3050;
+  --mono:'Azeret Mono',monospace;
+  --head:'Chakra Petch',sans-serif;
+  --disp:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 100% 50% at 50% -10%,rgba(0,229,255,.05),transparent 65%);pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.05) 3px,rgba(0,0,0,.05) 4px);pointer-events:none;z-index:9998;}
+.wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:14px 14px 80px;}
+
+/* HDR */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 0 16px;border-bottom:1px solid var(--bd);margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.logo{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:4px;color:var(--txb);}
+.logo em{color:var(--a);font-style:normal;}
+.logo sup{font-size:9px;color:var(--txd);letter-spacing:3px;vertical-align:super;margin-left:4px;}
+.hdr-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--a2);box-shadow:0 0 8px var(--a2);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hdr-tag{font-size:9px;color:var(--a2);letter-spacing:2px;}
+.dual-badge{font-size:8px;color:var(--a3);letter-spacing:2px;padding:3px 8px;border:1px solid rgba(124,92,255,.3);border-radius:2px;background:rgba(124,92,255,.07);}
+
+/* TICKER */
+.ticker{display:flex;overflow-x:auto;scrollbar-width:none;background:var(--s1);border:1px solid var(--bd2);border-radius:3px;margin-bottom:12px;}
+.ticker::-webkit-scrollbar{display:none;}
+.t-cell{display:flex;flex-direction:column;gap:2px;padding:9px 14px;border-right:1px solid var(--bd2);flex-shrink:0;min-width:85px;}
+.t-cell:last-child{border-right:none;flex:1;justify-content:center;}
+.t-sym{font-family:var(--head);font-size:10px;font-weight:700;color:var(--txd);letter-spacing:2px;}
+.t-price{font-family:var(--head);font-size:15px;font-weight:700;color:var(--txb);}
+.t-chg{font-size:9px;font-weight:600;}
+.up{color:var(--long);}.dn{color:var(--red);}
+.t-sub{font-size:8px;color:var(--txd);letter-spacing:1px;display:flex;align-items:center;gap:5px;}
+.t-spin{width:6px;height:6px;border:1px solid var(--bd);border-top-color:var(--a);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* INDICATORS */
+.ind-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:12px;}
+@media(max-width:600px){.ind-strip{grid-template-columns:repeat(3,1fr);}}
+.ind{background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:8px 10px;}
+.ind-l{font-size:7px;color:var(--txd);letter-spacing:2px;margin-bottom:3px;text-transform:uppercase;}
+.ind-v{font-family:var(--head);font-size:13px;font-weight:700;}
+.ind-s{font-size:7px;margin-top:1px;color:var(--txd);}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px;}
+@media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr);}}
+.stat{background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:8px 10px;}
+.stat-l{font-size:7px;color:var(--txd);letter-spacing:2px;margin-bottom:3px;}
+.stat-v{font-family:var(--head);font-size:19px;font-weight:700;}
+
+/* TABS */
+.tabs{display:flex;border:1px solid var(--bd);border-radius:3px;overflow:hidden;margin-bottom:14px;}
+.tab{flex:1;padding:10px 4px;font-family:var(--head);font-weight:600;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:var(--s1);color:var(--txd);border:none;cursor:pointer;transition:all .2s;border-right:1px solid var(--bd);}
+.tab:last-child{border-right:none;}
+.tab.on{background:var(--s2);color:var(--a);box-shadow:inset 0 -2px 0 var(--a);}
+.tab:hover:not(.on){color:var(--tx);}
+.panel{display:none;animation:fadeUp .3s ease;}.panel.on{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* NEWS */
+.news-strip{background:var(--s1);border:1px solid var(--bd2);border-left:3px solid var(--a3);border-radius:3px;padding:9px 13px;margin-bottom:12px;font-size:10px;color:var(--txd);line-height:1.7;}
+.news-strip strong{color:var(--txb);display:block;margin-bottom:3px;font-size:8px;letter-spacing:2px;}
+.ni{color:var(--tx);margin-bottom:1px;}
+.ni::before{content:'▸ ';color:var(--a3);}
+
+/* CONTROLS */
+.ctrl{display:flex;flex-direction:column;gap:9px;margin-bottom:14px;}
+.sel-w{position:relative;}
+select{width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:3px;color:var(--txb);font-family:var(--head);font-weight:600;font-size:13px;letter-spacing:2px;padding:10px 13px;appearance:none;cursor:pointer;transition:border-color .2s;}
+select:focus{outline:none;border-color:var(--a);}
+.sel-w::after{content:'▾';position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;pointer-events:none;}
+.info-b{background:rgba(124,92,255,.05);border:1px solid rgba(124,92,255,.2);border-radius:3px;padding:8px 12px;font-size:8px;color:var(--a3);letter-spacing:1.5px;display:flex;align-items:center;gap:7px;}
+.adot{width:4px;height:4px;background:var(--a3);border-radius:50%;animation:blink 2s infinite;flex-shrink:0;}
+.btn{width:100%;background:transparent;border:1px solid var(--a);color:var(--a);font-family:var(--head);font-weight:700;font-size:14px;letter-spacing:4px;padding:13px;border-radius:3px;cursor:pointer;text-transform:uppercase;position:relative;overflow:hidden;transition:color .25s;}
+.btn::before{content:'';position:absolute;inset:0;background:var(--a);transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:0;}
+.btn:hover::before{transform:scaleX(1);}
+.btn:hover{color:var(--bg);}
+.btn span{position:relative;z-index:1;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.btn:disabled::before{display:none;}
+
+/* ══ PIPELINE LOADER ══ */
+.pipeline{background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:20px;margin-bottom:12px;}
+.pipe-title{font-family:var(--head);font-size:10px;letter-spacing:3px;color:var(--txd);margin-bottom:16px;text-align:center;}
+.pipe-steps{display:flex;flex-direction:column;gap:0;}
+.pipe-step{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd2);position:relative;}
+.pipe-step:last-child{border-bottom:none;}
+.pipe-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border:1px solid var(--bd2);background:var(--bg);transition:all .4s;}
+.pipe-icon.idle{color:var(--txd);}
+.pipe-icon.running{border-color:var(--a);background:rgba(0,229,255,.08);color:var(--a);animation:blink .7s infinite;}
+.pipe-icon.done{border-color:var(--a2);background:rgba(0,255,157,.08);color:var(--a2);}
+.pipe-icon.fail{border-color:var(--red);background:rgba(255,48,80,.08);color:var(--red);}
+.pipe-icon.warn{border-color:var(--yel);background:rgba(255,179,0,.08);color:var(--yel);}
+.pipe-info{flex:1;}
+.pipe-name{font-family:var(--head);font-size:11px;letter-spacing:1px;color:var(--txd);margin-bottom:2px;transition:color .3s;}
+.pipe-name.running{color:var(--a);}
+.pipe-name.done{color:var(--txb);}
+.pipe-name.fail{color:var(--red);}
+.pipe-desc{font-size:9px;color:var(--txd);line-height:1.5;transition:all .3s;}
+.pipe-desc.active{color:var(--tx);}
+.pipe-bar{position:absolute;left:0;bottom:0;height:1px;background:var(--a);width:0;transition:width 2s linear;}
+.pipe-step.running .pipe-bar{width:100%;}
+
+/* ══ REVIEW PANEL ══ */
+.review-panel{background:var(--s1);border:1px solid var(--bd);border-radius:4px;overflow:hidden;margin-bottom:12px;animation:fadeUp .4s ease;}
+.review-hdr{padding:12px 15px;border-bottom:1px solid var(--bd2);background:var(--s2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.review-title{font-family:var(--head);font-size:12px;letter-spacing:2px;color:var(--a3);}
+.review-score{display:flex;align-items:center;gap:8px;}
+.score-num{font-family:var(--head);font-size:24px;font-weight:900;}
+.score-label{font-size:8px;color:var(--txd);letter-spacing:1px;}
+.score-10{color:var(--long);}
+.score-7{color:var(--a2);}
+.score-5{color:var(--yel);}
+.score-3{color:var(--red);}
+.review-verdict{padding:10px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd2);}
+.rv-approved{background:rgba(0,255,157,.05);border-left:3px solid var(--long);}
+.rv-rejected{background:rgba(255,48,80,.05);border-left:3px solid var(--red);}
+.rv-icon{font-size:20px;}
+.rv-text{flex:1;}
+.rv-verdict{font-family:var(--head);font-size:13px;letter-spacing:2px;margin-bottom:2px;}
+.rv-approved .rv-verdict{color:var(--long);}
+.rv-rejected .rv-verdict{color:var(--red);}
+.rv-reason{font-size:10px;color:var(--txd);line-height:1.5;}
+.review-checks{padding:12px 15px;}
+.checks-title{font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:10px;font-family:var(--head);}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+@media(max-width:480px){.check-grid{grid-template-columns:1fr;}}
+.check-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--bd2);border-radius:3px;}
+.check-icon{font-size:12px;flex-shrink:0;}
+.check-text{flex:1;}
+.check-name{font-size:9px;color:var(--txd);letter-spacing:1px;margin-bottom:1px;}
+.check-val{font-size:10px;font-weight:600;}
+.check-pass{color:var(--long);}
+.check-fail{color:var(--red);}
+.check-warn{color:var(--yel);}
+.review-scenarios{padding:0 15px 12px;}
+.scenarios-title{font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:8px;font-family:var(--head);}
+.scenario{padding:8px 10px;border-radius:3px;margin-bottom:5px;font-size:10px;line-height:1.5;}
+.sc-bull{background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.15);}
+.sc-bear{background:rgba(255,48,80,.05);border:1px solid rgba(255,48,80,.15);}
+.sc-base{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.15);}
+.sc-label{font-family:var(--head);font-size:8px;letter-spacing:2px;margin-bottom:3px;}
+.sc-bull .sc-label{color:var(--long);}
+.sc-bear .sc-label{color:var(--red);}
+.sc-base .sc-label{color:var(--a);}
+
+/* ══ SIGNAL CARD ══ */
+.sig{background:var(--s1);border:1px solid var(--bd);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.dir-b{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.dir-long{background:linear-gradient(135deg,rgba(0,255,157,.1),rgba(0,255,157,.03));border-bottom:1px solid rgba(0,255,157,.18);}
+.dir-short{background:linear-gradient(135deg,rgba(255,48,80,.1),rgba(255,48,80,.03));border-bottom:1px solid rgba(255,48,80,.18);}
+.dir-l{display:flex;align-items:center;gap:12px;}
+.dir-asset{font-family:var(--disp);font-weight:800;font-size:30px;color:var(--a);}
+.dir-type{font-family:var(--head);font-weight:900;font-size:26px;letter-spacing:3px;}
+.dir-long .dir-type{color:var(--long);}
+.dir-short .dir-type{color:var(--red);}
+.badges{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.bdg{font-family:var(--head);font-weight:700;font-size:9px;letter-spacing:2px;padding:3px 8px;border-radius:2px;text-transform:uppercase;}
+.bl{background:rgba(0,255,157,.1);color:var(--long);border:1px solid rgba(0,255,157,.22);}
+.bs{background:rgba(255,48,80,.1);color:var(--red);border:1px solid rgba(255,48,80,.22);}
+.bt{background:rgba(0,229,255,.07);color:var(--a);border:1px solid rgba(0,229,255,.16);}
+.bv{background:rgba(255,208,96,.07);color:var(--gold);border:1px solid rgba(255,208,96,.18);}
+.bq{background:rgba(124,92,255,.08);color:var(--a3);border:1px solid rgba(124,92,255,.2);font-size:8px;}
+.sig-body{padding:13px 15px;}
+.tf-note{font-size:9px;color:var(--a);letter-spacing:1px;padding:6px 10px;background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:2px;margin-bottom:10px;}
+.live-inds{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px;padding:10px;background:rgba(0,0,0,.3);border:1px solid var(--bd2);border-radius:3px;}
+@media(max-width:440px){.live-inds{grid-template-columns:repeat(2,1fr);}}
+.li-box{display:flex;flex-direction:column;gap:2px;}
+.li-lbl{font-size:7px;color:var(--txd);letter-spacing:2px;}
+.li-val{font-family:var(--head);font-size:12px;font-weight:700;}
+.levels{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px;}
+@media(max-width:400px){.levels{grid-template-columns:1fr;}}
+.lv{background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:9px 11px;}
+.lv-l{font-size:7px;color:var(--txd);letter-spacing:2px;margin-bottom:3px;}
+.lv-v{font-family:var(--head);font-size:14px;font-weight:700;}
+.ve{color:var(--a);}.vs{color:var(--red);}
+.tps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:9px;}
+@media(max-width:460px){.tps{grid-template-columns:1fr;}}
+.tp{background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:9px 11px;position:relative;overflow:hidden;}
+.tp::after{content:'';position:absolute;bottom:0;left:0;height:2px;background:var(--long);}
+.tp1::after{width:35%;}.tp2::after{width:65%;}.tp3::after{width:100%;}
+.tp-l{font-size:7px;color:var(--txd);letter-spacing:1px;margin-bottom:3px;}
+.tp-v{font-family:var(--head);font-size:13px;font-weight:700;color:var(--long);}
+.tp-d{font-size:8px;color:var(--a2);margin-top:2px;}
+.meta-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:9px;}
+.meta{background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:8px 11px;}
+.meta-l{font-size:7px;color:var(--txd);letter-spacing:2px;margin-bottom:2px;}
+.meta-v{font-family:var(--head);font-size:16px;font-weight:700;color:var(--a2);}
+.pbar-w{margin-bottom:9px;}
+.pbar-top{display:flex;justify-content:space-between;font-size:8px;color:var(--txd);margin-bottom:4px;}
+.pbar-top span:last-child{color:var(--a2);font-weight:bold;}
+.pbar-track{height:4px;background:var(--bd2);border-radius:2px;overflow:hidden;}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--a),var(--a2));border-radius:2px;transition:width 1.2s ease;}
+.section{background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px;margin-bottom:7px;}
+.sec-t{font-size:7px;color:var(--txd);letter-spacing:2px;margin-bottom:5px;font-family:var(--head);}
+.sec-body{font-size:10px;color:var(--txd);line-height:1.8;}
+.news-sec{border-left:3px solid var(--a3);}
+.news-sec .sec-t{color:var(--a3);}
+.inval{border:1px solid rgba(255,48,80,.22);background:rgba(255,48,80,.03);border-radius:3px;padding:9px 12px;font-size:10px;color:var(--red);margin-bottom:8px;}
+.inval::before{content:'⚠ NO ENTRAR SI: ';font-weight:bold;letter-spacing:1px;}
+.expiry{border-radius:3px;padding:9px 13px;border:1px solid;transition:all .4s;}
+.exp-v{background:rgba(0,255,157,.04);border-color:rgba(0,255,157,.18);}
+.exp-w{background:rgba(255,179,0,.04);border-color:rgba(255,179,0,.25);}
+.exp-x{background:rgba(255,48,80,.04);border-color:rgba(255,48,80,.25);}
+.exp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.exp-meta{display:flex;flex-direction:column;gap:1px;}
+.exp-lbl{font-size:7px;color:var(--txd);letter-spacing:2px;}
+.exp-when{font-size:9px;color:var(--txd);}
+.exp-cd{font-family:var(--head);font-size:17px;font-weight:700;letter-spacing:3px;}
+.exp-v .exp-cd{color:var(--long);}.exp-w .exp-cd{color:var(--yel);}.exp-x .exp-cd{color:var(--red);}
+.exp-st{font-family:var(--head);font-size:8px;letter-spacing:2px;padding:2px 8px;border-radius:2px;}
+.exp-v .exp-st{background:rgba(0,255,157,.1);color:var(--long);border:1px solid rgba(0,255,157,.2);}
+.exp-w .exp-st{background:rgba(255,179,0,.1);color:var(--yel);border:1px solid rgba(255,179,0,.2);}
+.exp-x .exp-st{background:rgba(255,48,80,.1);color:var(--red);border:1px solid rgba(255,48,80,.2);}
+.exp-track{height:2px;background:var(--bd2);border-radius:1px;overflow:hidden;}
+.exp-fill{height:100%;border-radius:1px;transition:width 1s linear,background .4s;}
+.nosig{border:1px solid rgba(255,48,80,.28);background:rgba(255,48,80,.03);border-radius:4px;padding:32px 20px;text-align:center;}
+.nosig-icon{font-size:32px;margin-bottom:10px;}
+.nosig-t{font-family:var(--head);font-size:16px;letter-spacing:3px;color:var(--red);margin-bottom:7px;}
+.nosig-s{font-size:11px;color:var(--txd);line-height:1.7;max-width:480px;margin:0 auto;}
+.rejected-sig{border:1px solid rgba(255,179,0,.25);background:rgba(255,179,0,.03);border-radius:4px;padding:20px;text-align:center;animation:fadeUp .3s ease;}
+.rej-icon{font-size:28px;margin-bottom:8px;}
+.rej-t{font-family:var(--head);font-size:14px;letter-spacing:2px;color:var(--yel);margin-bottom:6px;}
+.rej-s{font-size:10px;color:var(--txd);line-height:1.6;}
+.raw-out{background:var(--s1);border:1px solid var(--bd);border-radius:3px;padding:15px;font-size:10px;line-height:1.9;color:var(--tx);white-space:pre-wrap;}
+.err-box{border:1px solid var(--yel);background:rgba(255,179,0,.04);border-radius:3px;padding:13px;font-size:10px;color:var(--yel);line-height:1.7;}
+
+/* TRACKER */
+.trk-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
+.trk-t{font-family:var(--head);font-size:13px;letter-spacing:2px;color:var(--txb);}
+.btn-sm{background:transparent;border:1px solid var(--bd);color:var(--txd);font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:5px 10px;border-radius:2px;cursor:pointer;transition:all .2s;}
+.btn-sm:hover{border-color:var(--red);color:var(--red);}
+.trk-empty{padding:28px;text-align:center;font-size:9px;color:var(--txd);letter-spacing:1px;border:1px dashed var(--bd2);border-radius:3px;}
+.trk-i{background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:9px 12px;margin-bottom:6px;display:grid;grid-template-columns:46px 1fr auto auto;gap:7px;align-items:center;}
+@media(max-width:460px){.trk-i{grid-template-columns:46px 1fr;}}
+.trk-sym{font-family:var(--head);font-size:14px;font-weight:700;color:var(--a);}
+.trk-meta{display:flex;flex-direction:column;gap:2px;}
+.trk-type{font-size:8px;color:var(--txd);letter-spacing:1px;}
+.trk-en{font-size:9px;color:var(--tx);}
+.trk-res{display:flex;gap:4px;flex-wrap:wrap;}
+.rb{font-family:var(--head);font-size:8px;letter-spacing:1px;padding:3px 8px;border-radius:2px;cursor:pointer;border:1px solid;background:transparent;transition:all .2s;}
+.rb-tp1{color:var(--a2);border-color:rgba(0,255,157,.25);}.rb-tp1:hover{background:rgba(0,255,157,.1);}
+.rb-tp2{color:var(--a);border-color:rgba(0,229,255,.25);}.rb-tp2:hover{background:rgba(0,229,255,.08);}
+.rb-tp3{color:var(--gold);border-color:rgba(255,208,96,.25);}.rb-tp3:hover{background:rgba(255,208,96,.08);}
+.rb-sl{color:var(--red);border-color:rgba(255,48,80,.25);}.rb-sl:hover{background:rgba(255,48,80,.08);}
+.trk-x{font-size:15px;cursor:pointer;color:var(--txd);background:none;border:none;line-height:1;}
+.trk-x:hover{color:var(--red);}
+.done-w{background:rgba(0,255,157,.07);color:var(--a2);border:1px solid rgba(0,255,157,.2);border-radius:2px;padding:2px 9px;font-family:var(--head);font-size:8px;letter-spacing:1px;}
+.done-l{background:rgba(255,48,80,.07);color:var(--red);border:1px solid rgba(255,48,80,.2);border-radius:2px;padding:2px 9px;font-family:var(--head);font-size:8px;letter-spacing:1px;}
+
+/* EVENTS */
+.ev-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.ev-date{font-family:var(--head);font-size:14px;letter-spacing:2px;color:var(--txb);}
+.ev-date span{color:var(--a);}
+.btn-ev{background:transparent;border:1px solid var(--bd);color:var(--txd);font-size:8px;letter-spacing:2px;padding:7px 13px;border-radius:3px;cursor:pointer;transition:all .2s;font-family:var(--mono);}
+.btn-ev:hover{border-color:var(--a);color:var(--a);}
+.btn-ev:disabled{opacity:.3;cursor:not-allowed;}
+.ev-leg{display:flex;gap:13px;margin-bottom:10px;flex-wrap:wrap;}
+.ev-li{display:flex;align-items:center;gap:5px;font-size:8px;color:var(--txd);letter-spacing:1px;}
+.ld{width:6px;height:6px;border-radius:50%;}
+.verdict{border-radius:3px;padding:11px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.v-op{background:rgba(0,255,157,.04);border:1px solid rgba(0,255,157,.22);}
+.v-es{background:rgba(255,48,80,.04);border:1px solid rgba(255,48,80,.22);}
+.v-ca{background:rgba(255,179,0,.04);border:1px solid rgba(255,179,0,.22);}
+.v-ico{font-size:22px;flex-shrink:0;}
+.v-bd{flex:1;}
+.v-tit{font-family:var(--head);font-weight:700;font-size:15px;letter-spacing:3px;margin-bottom:2px;}
+.v-op .v-tit{color:var(--long);}.v-es .v-tit{color:var(--red);}.v-ca .v-tit{color:var(--yel);}
+.v-reason{font-size:10px;color:var(--txd);line-height:1.6;}
+.sumbox{background:var(--s1);border:1px solid var(--bd2);border-left:3px solid var(--a);border-radius:3px;padding:10px 13px;margin-bottom:12px;font-size:10px;color:var(--txd);line-height:1.7;}
+.sumbox strong{color:var(--txb);display:block;margin-bottom:2px;font-size:8px;letter-spacing:2px;}
+.ev-list{display:flex;flex-direction:column;gap:5px;}
+.ev-i{background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:9px 12px;display:flex;align-items:flex-start;gap:9px;}
+.ev-time{font-size:8px;color:var(--txd);min-width:44px;margin-top:2px;}
+.ev-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ih{background:var(--red);box-shadow:0 0 5px var(--red);}
+.im{background:var(--yel);}
+.il{background:var(--txd);}
+.ev-inf{flex:1;}
+.ev-nm{font-size:11px;color:var(--txb);margin-bottom:1px;}
+.ev-nt{font-size:9px;color:var(--txd);}
+.evsig{font-size:8px;letter-spacing:1px;padding:2px 7px;border-radius:2px;text-transform:uppercase;font-weight:bold;flex-shrink:0;font-family:var(--head);}
+.se{background:rgba(255,48,80,.1);color:var(--red);border:1px solid rgba(255,48,80,.22);}
+.sc{background:rgba(255,179,0,.1);color:var(--yel);border:1px solid rgba(255,179,0,.22);}
+.so{background:rgba(0,255,157,.07);color:var(--long);border:1px solid rgba(0,255,157,.16);}
+
+footer{margin-top:36px;padding-top:12px;border-top:1px solid var(--bd2);font-size:8px;color:var(--txd);letter-spacing:1px;text-align:center;line-height:2;}
+footer strong{color:var(--red);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="logo"><em>APEX</em> SIGNALS <sup>v6</sup></div>
+  <div class="hdr-r">
+    <div class="live-dot"></div>
+    <span class="hdr-tag">BINANCE LIVE</span>
+    <span class="dual-badge">⚡ DOBLE IA</span>
+    <button onclick="toggleKeyModal()" id="key-btn" style="background:transparent;border:1px solid var(--bd);color:var(--txd);font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:4px 10px;border-radius:2px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--a)';this.style.color='var(--a)'" onmouseout="this.style.borderColor='var(--bd)';this.style.color='var(--txd)'">🔑 API KEY</button>
+  </div>
+</div>
+
+<!-- API KEY MODAL -->
+<div id="key-modal" style="display:none;position:fixed;inset:0;background:rgba(2,8,16,.92);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--s1);border:1px solid var(--bd);border-radius:6px;padding:24px;max-width:480px;width:100%;position:relative;">
+    <div style="font-family:var(--head);font-size:14px;letter-spacing:3px;color:var(--txb);margin-bottom:6px;">🔑 ANTHROPIC API KEY</div>
+    <div style="font-size:10px;color:var(--txd);line-height:1.7;margin-bottom:16px;">
+      Obtén tu key en <span style="color:var(--a)">console.anthropic.com</span> → API Keys → Create Key<br>
+      La key se guarda solo en tu navegador (localStorage). Nunca se envía a terceros.
+    </div>
+    <input id="key-input" type="password" placeholder="sk-ant-api03-..." style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:3px;color:var(--txb);font-family:var(--mono);font-size:12px;padding:10px 12px;outline:none;margin-bottom:10px;transition:border-color .2s;" onfocus="this.style.borderColor='var(--a)'" onblur="this.style.borderColor='var(--bd)'">
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveKey()" style="flex:1;background:transparent;border:1px solid var(--a);color:var(--a);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:10px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='var(--a)';this.style.color='var(--bg)'" onmouseout="this.style.background='transparent';this.style.color='var(--a)'">GUARDAR</button>
+      <button onclick="toggleKeyModal()" style="background:transparent;border:1px solid var(--bd);color:var(--txd);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:10px 16px;border-radius:3px;cursor:pointer;">CERRAR</button>
+    </div>
+    <div id="key-status" style="margin-top:10px;font-size:10px;min-height:16px;"></div>
+  </div>
+</div>
+
+<div class="ticker">
+  <div class="t-cell"><div class="t-sym">BTC/USDT</div><div class="t-price" id="p-btc">—</div><div class="t-chg" id="c-btc">—</div></div>
+  <div class="t-cell"><div class="t-sym">ETH/USDT</div><div class="t-price" id="p-eth">—</div><div class="t-chg" id="c-eth">—</div></div>
+  <div class="t-cell"><div class="t-sym">SOL/USDT</div><div class="t-price" id="p-sol">—</div><div class="t-chg" id="c-sol">—</div></div>
+  <div class="t-cell"><div class="t-sym">F&G</div><div class="t-price" id="p-fg" style="font-size:13px">—</div><div class="t-chg" id="fg-cl" style="font-size:8px;letter-spacing:1px">—</div></div>
+  <div class="t-cell"><div class="t-sym">FUENTE</div><div class="t-sub"><div class="t-spin"></div><span id="tick-ts" style="font-size:8px">BINANCE</span></div></div>
+</div>
+
+<div class="ind-strip" id="ind-strip">
+  <div class="ind"><div class="ind-l">RSI 14 (1D)</div><div class="ind-v" id="i-rsi" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi-s">—</div></div>
+  <div class="ind"><div class="ind-l">RSI 14 (4H)</div><div class="ind-v" id="i-rsi4" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi4-s">—</div></div>
+  <div class="ind"><div class="ind-l">EMA 50</div><div class="ind-v" id="i-ema50" style="color:var(--a)">—</div><div class="ind-s" id="i-ema50-s">—</div></div>
+  <div class="ind"><div class="ind-l">EMA 200</div><div class="ind-v" id="i-ema200" style="color:var(--a)">—</div><div class="ind-s" id="i-ema200-s">—</div></div>
+  <div class="ind"><div class="ind-l">MACD</div><div class="ind-v" id="i-macd" style="color:var(--yel)">—</div><div class="ind-s" id="i-macd-s">—</div></div>
+  <div class="ind"><div class="ind-l">FUNDING</div><div class="ind-v" id="i-fund" style="color:var(--tx)">—</div><div class="ind-s" id="i-fund-s">—</div></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-l">WIN RATE</div><div class="stat-v" id="s-wr" style="color:var(--a2)">—</div></div>
+  <div class="stat"><div class="stat-l">SEÑALES</div><div class="stat-v" id="s-tot" style="color:var(--a)">0</div></div>
+  <div class="stat"><div class="stat-l">✓ WIN</div><div class="stat-v" id="s-win" style="color:var(--long)">0</div></div>
+  <div class="stat"><div class="stat-l">✗ LOSS</div><div class="stat-v" id="s-loss" style="color:var(--red)">0</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="sw('signals')">⚡ SEÑALES</button>
+  <button class="tab" onclick="sw('tracker')">📊 TRACKER</button>
+  <button class="tab" onclick="sw('events')">📅 EVENTOS</button>
+</div>
+
+<!-- SIGNALS TAB -->
+<div id="tab-signals" class="panel on">
+  <div class="news-strip" id="news-strip">
+    <strong>📰 NOTICIAS EN VIVO</strong>
+    <div class="ni" style="color:var(--a)">Cargando noticias crypto...</div>
+  </div>
+  <div class="ctrl">
+    <div class="sel-w">
+      <select id="asset" onchange="onAssetChange()">
+        <option value="BTC">BTC — BITCOIN</option>
+        <option value="ETH">ETH — ETHEREUM</option>
+        <option value="SOL">SOL — SOLANA</option>
+        <option value="ALL">ALL — LOS 3 ACTIVOS</option>
+      </select>
+    </div>
+    <div class="info-b">
+      <div class="adot"></div>
+      IA GENERADORA → CONTROL INTERNO (14 VERIFICACIONES) → IA VALIDADORA → SEÑAL APROBADA
+    </div>
+    <button class="btn" id="btn-sig" onclick="genSignal()"><span>⚡ GENERAR SEÑAL VERIFICADA</span></button>
+  </div>
+  <div id="output"></div>
+</div>
+
+<!-- TRACKER TAB -->
+<div id="tab-tracker" class="panel">
+  <div class="trk-hdr"><div class="trk-t">HISTORIAL</div><button class="btn-sm" onclick="clearAll()">✕ LIMPIAR</button></div>
+  <div id="trk-list"><div class="trk-empty">SIN SEÑALES — GENERA UNA PARA EMPEZAR</div></div>
+</div>
+
+<!-- EVENTS TAB -->
+<div id="tab-events" class="panel">
+  <div class="ev-top">
+    <div class="ev-date">HOY — <span id="ev-date"></span></div>
+    <button class="btn-ev" id="btn-ev" onclick="loadEvents()">↻ ANALIZAR</button>
+  </div>
+  <div class="ev-leg">
+    <div class="ev-li"><div class="ld" style="background:var(--red)"></div>ALTO</div>
+    <div class="ev-li"><div class="ld" style="background:var(--yel)"></div>MEDIO</div>
+    <div class="ev-li"><div class="ld" style="background:var(--txd)"></div>BAJO</div>
+  </div>
+  <div id="ev-out"><div style="padding:28px;text-align:center;font-size:9px;color:var(--txd);letter-spacing:2px;">PRESIONA "ANALIZAR" PARA CARGAR EVENTOS</div></div>
+</div>
+
+<footer>
+  <strong>⚠ RIESGO:</strong> Análisis de IA educativo. No es asesoramiento financiero.<br>
+  Datos: Binance API pública · Indicadores calculados en tiempo real · Doble verificación IA antes de cada señal<br>
+  El trading puede resultar en pérdida total del capital.
+</footer>
+</div>
+
+<script>
+/* ══════════════════════════════
+   API KEY MANAGEMENT
+══════════════════════════════ */
+function getKey(){ return localStorage.getItem('apex_apikey')||''; }
+function saveKey(){
+  const val=document.getElementById('key-input').value.trim();
+  const st=document.getElementById('key-status');
+  if(!val.startsWith('sk-ant-')){st.style.color='var(--red)';st.textContent='⚠ La key debe empezar con sk-ant-...';return;}
+  localStorage.setItem('apex_apikey',val);
+  st.style.color='var(--long)';st.textContent='✓ Key guardada correctamente';
+  updateKeyBtn();
+  setTimeout(()=>toggleKeyModal(),1200);
+}
+function toggleKeyModal(){
+  const m=document.getElementById('key-modal');
+  const visible=m.style.display==='flex';
+  m.style.display=visible?'none':'flex';
+  if(!visible){
+    const k=getKey();
+    const inp=document.getElementById('key-input');
+    if(inp) inp.value=k;
+    const st=document.getElementById('key-status');
+    if(st) st.textContent=k?'✓ Key guardada — puedes actualizarla':'Sin key — ingresa tu Anthropic API key';
+    if(st) st.style.color=k?'var(--long)':'var(--txd)';
+  }
+}
+function updateKeyBtn(){
+  const btn=document.getElementById('key-btn');
+  if(!btn)return;
+  const k=getKey();
+  btn.textContent=k?'🔑 KEY ✓':'🔑 API KEY';
+  btn.style.color=k?'var(--a2)':'var(--txd)';
+  btn.style.borderColor=k?'rgba(0,255,157,.3)':'var(--bd)';
+}
+function apiHeaders(){
+  const k=getKey();
+  if(!k) throw new Error('Falta la API Key. Haz click en "🔑 API KEY" en la esquina superior derecha y pega tu key de Anthropic.');
+  return{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+}
+const BINANCE='https://api.binance.com/api/v3';
+const BINANCE_F='https://fapi.binance.com/fapi/v1';
+const today=new Date();
+let live={}, indicators={}, tracker=JSON.parse(localStorage.getItem('apex6_tracker')||'[]');
+let newsCtx='', newsLoaded=false;
+const _timers={};
+const SYMBOLS={BTC:'BTCUSDT',ETH:'ETHUSDT',SOL:'SOLUSDT'};
+
+document.getElementById('ev-date').textContent=
+  today.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
+
+/* ══════════════════════════════
+   INDICATORS MATH
+══════════════════════════════ */
+function calcRSI(closes,period=14){
+  if(closes.length<period+1)return null;
+  let g=0,l=0;
+  for(let i=1;i<=period;i++){const d=closes[i]-closes[i-1];d>0?g+=d:l+=Math.abs(d);}
+  let ag=g/period,al=l/period;
+  for(let i=period+1;i<closes.length;i++){
+    const d=closes[i]-closes[i-1];
+    ag=(ag*(period-1)+(d>0?d:0))/period;
+    al=(al*(period-1)+(d<0?Math.abs(d):0))/period;
+  }
+  return al===0?100:100-(100/(1+ag/al));
+}
+function calcEMA(closes,period){
+  if(closes.length<period)return null;
+  const k=2/(period+1);
+  let ema=closes.slice(0,period).reduce((a,b)=>a+b,0)/period;
+  for(let i=period;i<closes.length;i++)ema=closes[i]*k+ema*(1-k);
+  return ema;
+}
+function calcMACD(closes){
+  if(closes.length<26)return null;
+  const e12=calcEMA(closes,12),e26=calcEMA(closes,26);
+  if(!e12||!e26)return null;
+  const line=e12-e26;
+  // Approximate signal (EMA9 of last few MACD values)
+  const macdSeries=[];
+  for(let i=26;i<=closes.length;i++){
+    const s12=calcEMA(closes.slice(0,i),12),s26=calcEMA(closes.slice(0,i),26);
+    if(s12&&s26)macdSeries.push(s12-s26);
+  }
+  const signal=macdSeries.length>=9?calcEMA(macdSeries,9):null;
+  const hist=signal?line-signal:null;
+  return{line,signal,hist,bullish:line>0,crossover:signal&&hist>0&&(macdSeries[macdSeries.length-2]<(signal||0))};
+}
+function calcBB(closes,period=20){
+  if(closes.length<period)return null;
+  const slice=closes.slice(-period);
+  const mean=slice.reduce((a,b)=>a+b,0)/period;
+  const std=Math.sqrt(slice.reduce((a,b)=>a+(b-mean)**2,0)/period);
+  return{upper:mean+2*std,middle:mean,lower:mean-2*std,width:(4*std/mean*100).toFixed(2)};
+}
+function calcATR(candles,period=14){
+  if(candles.length<period+1)return null;
+  const trs=[];
+  for(let i=1;i<candles.length;i++){
+    const c=candles[i],p=candles[i-1];
+    trs.push(Math.max(c.high-c.low,Math.abs(c.high-p.close),Math.abs(c.low-p.close)));
+  }
+  return trs.slice(-period).reduce((a,b)=>a+b,0)/period;
+}
+function detectStructure(closes){
+  const n=closes.length;
+  if(n<5)return'INDEFINIDA';
+  const last=closes.slice(-5);
+  const hh=last[4]>last[2]&&last[2]>last[0];
+  const hl=last[3]>last[1];
+  const lh=last[4]<last[2]&&last[2]<last[0];
+  const ll=last[3]<last[1];
+  if(hh&&hl)return'HH/HL — TENDENCIA ALCISTA';
+  if(lh&&ll)return'LH/LL — TENDENCIA BAJISTA';
+  if(hh&&ll)return'RANGO — CONSOLIDACIÓN';
+  return'ESTRUCTURA MIXTA';
+}
+
+/* ══════════════════════════════
+   BINANCE FETCH — CORS PROXY
+══════════════════════════════ */
+// Binance doesn't allow direct browser calls — use public CORS proxies
+const BINANCE_PROXY = 'https://api.binance.com/api/v3';
+const BINANCE_F_PROXY = 'https://fapi.binance.com/fapi/v1';
+const COINGECKO = 'https://api.coingecko.com/api/v3';
+
+async function safeFetch(url, fallback=null){
+  // Try direct first, then proxy alternatives
+  const proxies = [
+    url,
+    'https://corsproxy.io/?' + encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  ];
+  for(const u of proxies){
+    try{
+      const r = await fetch(u, {signal: AbortSignal.timeout(8000)});
+      if(r.ok) return r;
+    }catch(e){ continue; }
+  }
+  return null;
+}
+
+async function fetchBinanceTicker(){
+  try{
+    // Try Binance first, fallback to CoinGecko
+    let usedBinance = false;
+    try{
+      const r = await safeFetch(`${BINANCE_PROXY}/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]`);
+      if(r){
+        const data = await r.json();
+        if(Array.isArray(data) && data.length > 0){
+          data.forEach(d=>{
+            const s=d.symbol.replace('USDT','');
+            live[s]={price:parseFloat(d.lastPrice),chg:parseFloat(d.priceChangePercent),vol:parseFloat(d.quoteVolume),high:parseFloat(d.highPrice),low:parseFloat(d.lowPrice)};
+          });
+          usedBinance = true;
+        }
+      }
+    }catch(e){}
+
+    // CoinGecko fallback
+    if(!usedBinance){
+      const r = await fetch(`${COINGECKO}/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true`);
+      const d = await r.json();
+      live['BTC']={price:d.bitcoin?.usd,chg:d.bitcoin?.usd_24h_change,vol:d.bitcoin?.usd_24h_vol||0,high:0,low:0};
+      live['ETH']={price:d.ethereum?.usd,chg:d.ethereum?.usd_24h_change,vol:d.ethereum?.usd_24h_vol||0,high:0,low:0};
+      live['SOL']={price:d.solana?.usd,chg:d.solana?.usd_24h_change,vol:d.solana?.usd_24h_vol||0,high:0,low:0};
+    }
+
+    updateTicker();
+    document.getElementById('tick-ts').textContent=(usedBinance?'BINANCE':'COINGECKO')+' '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    document.getElementById('tick-ts').textContent='OFFLINE';
+  }
+}
+
+async function fetchCandles(symbol, interval, limit){
+  // Try Binance klines via proxy
+  try{
+    const url = `${BINANCE_PROXY}/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+    const r = await safeFetch(url);
+    if(r){
+      const d = await r.json();
+      if(Array.isArray(d) && d.length > 0){
+        return d.map(c=>({open:parseFloat(c[1]),high:parseFloat(c[2]),low:parseFloat(c[3]),close:parseFloat(c[4]),vol:parseFloat(c[5])}));
+      }
+    }
+  }catch(e){}
+
+  // CoinGecko fallback — get OHLC data
+  try{
+    const cgId = symbol.replace('USDT','').toLowerCase()
+      .replace('btc','bitcoin').replace('eth','ethereum').replace('sol','solana');
+    const days = interval==='1d'?200:interval==='4h'?17:30;
+    const r = await fetch(`${COINGECKO}/coins/${cgId}/ohlc?vs_currency=usd&days=${days}`);
+    const d = await r.json();
+    if(Array.isArray(d) && d.length > 0){
+      return d.map(c=>({open:parseFloat(c[1]),high:parseFloat(c[2]),low:parseFloat(c[3]),close:parseFloat(c[4]),vol:0}));
+    }
+  }catch(e){}
+
+  return null;
+}
+
+async function fetchFundingRate(symbol){
+  try{
+    const url = `${BINANCE_F_PROXY}/premiumIndex?symbol=${symbol}`;
+    const r = await safeFetch(url);
+    if(r){ const d=await r.json(); return parseFloat(d.lastFundingRate)*100; }
+  }catch(e){}
+  return null;
+}
+
+async function fetchFG(){
+  try{
+    const r=await fetch('https://api.alternative.me/fng/?limit=1');
+    const d=await r.json(); const fg=d.data?.[0];
+    if(fg){
+      const el=document.getElementById('p-fg'),cl=document.getElementById('fg-cl');
+      el.textContent=fg.value; cl.textContent=fg.value_classification.toUpperCase();
+      el.style.color=fg.value<25?'var(--red)':fg.value<50?'var(--yel)':'var(--long)';
+      live._fg=fg;
+    }
+  }catch(e){}
+}
+
+async function calcIndicators(sym){
+  const bin=SYMBOLS[sym];
+  try{
+    pipeStep&&pipeStep('ps2','running',`Descargando velas ${sym}...`);
+    const[c1d,c4h,c1w]=await Promise.all([
+      fetchCandles(bin,'1d',220),
+      fetchCandles(bin,'4h',100),
+      fetchCandles(bin,'1w',30)
+    ]);
+
+    // If all fail, use price-based minimal indicators
+    if(!c1d || c1d.length < 10){
+      const price = live[sym]?.price || 0;
+      indicators[sym] = {
+        price, rsi1d:'50', rsi4h:'50', rsi1w:'50',
+        ema21:price.toFixed(2), ema50:price.toFixed(2), ema200:price.toFixed(2),
+        macd:{line:0,bullish:true,crossover:false},
+        bb:{upper:(price*1.02).toFixed(2),middle:price.toFixed(2),lower:(price*0.98).toFixed(2),width:'4.00'},
+        atr:(price*0.02).toFixed(2), fund:null,
+        volRatio:'1.00', vol24h:live[sym]?.vol||0,
+        priceAboveEMA50:true, priceAboveEMA200:true, goldenCross:true,
+        structure:'DATOS LIMITADOS — ANÁLISIS BASADO EN PRECIO',
+        high20d:(price*1.05).toFixed(2), low20d:(price*0.95).toFixed(2),
+        high4h:(price*1.02).toFixed(2), low4h:(price*0.98).toFixed(2),
+        limited:true
+      };
+      updateIndStrip(sym);
+      return indicators[sym];
+    }
+
+    const cl1d=c1d.map(c=>c.close),cl4h=(c4h||[]).map(c=>c.close),cl1w=(c1w||[]).map(c=>c.close);
+    const vols=c1d.map(c=>c.vol);
+    const price=cl1d[cl1d.length-1];
+
+    const rsi1d=calcRSI(cl1d,14);
+    const rsi4h=cl4h.length>14?calcRSI(cl4h,14):null;
+    const rsi1w=cl1w.length>14?calcRSI(cl1w,14):null;
+    const ema50=cl1d.length>50?calcEMA(cl1d,50):null;
+    const ema200=cl1d.length>200?calcEMA(cl1d,200):null;
+    const ema21=cl1d.length>21?calcEMA(cl1d,21):null;
+    const macd=calcMACD(cl1d.slice(-60));
+    const bb=calcBB(cl1d);
+    const atr=calcATR(c1d);
+    const fund=await fetchFundingRate(bin);
+    const volAvg=vols.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const curVol=vols[vols.length-1];
+    const volRatio=curVol/volAvg;
+    const structure=detectStructure(cl1d.slice(-10));
+
+    // Key levels
+    const high20d=Math.max(...c1d.slice(-20).map(c=>c.high));
+    const low20d=Math.min(...c1d.slice(-20).map(c=>c.low));
+    const high4h=c4h&&c4h.length>0?Math.max(...c4h.slice(-24).map(c=>c.high)):price*1.02;
+    const low4h=c4h&&c4h.length>0?Math.min(...c4h.slice(-24).map(c=>c.low)):price*0.98;
+
+    indicators[sym]={
+      price,rsi1d:rsi1d?.toFixed(1),rsi4h:rsi4h?.toFixed(1),rsi1w:rsi1w?.toFixed(1),
+      ema21:ema21?.toFixed(2),ema50:ema50?.toFixed(2),ema200:ema200?.toFixed(2),
+      macd,bb,atr:atr?.toFixed(2),fund:fund?.toFixed(4),
+      volRatio:volRatio?.toFixed(2),vol24h:live[sym]?.vol,
+      priceAboveEMA50:ema50?price>ema50:null,
+      priceAboveEMA200:ema200?price>ema200:null,
+      goldenCross:ema50&&ema200?ema50>ema200:null,
+      structure,
+      high20d:high20d?.toFixed(2),low20d:low20d?.toFixed(2),
+      high4h:high4h?.toFixed(2),low4h:low4h?.toFixed(2),
+    };
+    updateIndStrip(sym);
+    return indicators[sym];
+  }catch(e){return null;}
+}
+
+function updateTicker(){
+  ['BTC','ETH','SOL'].forEach(s=>{
+    const d=live[s];if(!d)return;
+    const dec=s==='BTC'?0:2;
+    const pe=document.getElementById('p-'+s.toLowerCase());
+    const ce=document.getElementById('c-'+s.toLowerCase());
+    if(pe)pe.textContent='$'+d.price.toLocaleString('en-US',{maximumFractionDigits:dec});
+    if(ce){ce.textContent=(d.chg>=0?'+':'')+d.chg.toFixed(2)+'%';ce.className='t-chg '+(d.chg>=0?'up':'dn');}
+  });
+}
+
+function updateIndStrip(sym){
+  const ind=indicators[sym];if(!ind)return;
+  const rsiColor=v=>parseFloat(v)>70?'var(--red)':parseFloat(v)<30?'var(--long)':'var(--yel)';
+  const rsiLabel=v=>parseFloat(v)>70?'SOBRECOMPRADO':parseFloat(v)<30?'SOBREVENDIDO':'NEUTRAL';
+  if(ind.rsi1d){const e=document.getElementById('i-rsi'),s=document.getElementById('i-rsi-s');if(e){e.textContent=ind.rsi1d;e.style.color=rsiColor(ind.rsi1d);if(s)s.textContent=rsiLabel(ind.rsi1d);}}
+  if(ind.rsi4h){const e=document.getElementById('i-rsi4'),s=document.getElementById('i-rsi4-s');if(e){e.textContent=ind.rsi4h;e.style.color=rsiColor(ind.rsi4h);if(s)s.textContent=rsiLabel(ind.rsi4h);}}
+  if(ind.ema50){const e=document.getElementById('i-ema50'),s=document.getElementById('i-ema50-s');if(e&&ind.ema50&&parseFloat(ind.ema50)>0){e.textContent='$'+parseFloat(ind.ema50).toLocaleString('en-US',{maximumFractionDigits:0});e.style.color=ind.priceAboveEMA50?'var(--long)':'var(--red)';if(s)s.textContent=ind.priceAboveEMA50?'↑ PRECIO ARRIBA':'↓ PRECIO ABAJO';}}
+  if(ind.ema200){const e=document.getElementById('i-ema200'),s=document.getElementById('i-ema200-s');if(e&&ind.ema200&&parseFloat(ind.ema200)>0){e.textContent='$'+parseFloat(ind.ema200).toLocaleString('en-US',{maximumFractionDigits:0});e.style.color=ind.priceAboveEMA200?'var(--long)':'var(--red)';if(s)s.textContent=ind.goldenCross?'GOLDEN CROSS':'DEATH CROSS';}}
+  if(ind.macd){const e=document.getElementById('i-macd'),s=document.getElementById('i-macd-s');if(e){e.textContent=ind.macd.bullish?'BULL':'BEAR';e.style.color=ind.macd.bullish?'var(--long)':'var(--red)';if(s)s.textContent=ind.macd.crossover?'CRUCE ↑':'sin cruce';}}
+  if(ind.fund!==null&&ind.fund!==undefined){const e=document.getElementById('i-fund'),s=document.getElementById('i-fund-s');if(e){const fv=parseFloat(ind.fund);e.textContent=fv.toFixed(4)+'%';e.style.color=fv>0.05?'var(--red)':fv<-0.01?'var(--long)':'var(--tx)';if(s)s.textContent=fv>0.05?'LONGS PAGAN':fv<-0.01?'SHORTS PAGAN':'NEUTRO';}}
+}
+
+async function onAssetChange(){
+  const s=document.getElementById('asset').value;
+  if(s!=='ALL')await calcIndicators(s);
+}
+
+/* ══════════════════════════════
+   NEWS
+══════════════════════════════ */
+async function fetchNews(){
+  const strip=document.getElementById('news-strip');
+  strip.innerHTML=`<strong>📰 NOTICIAS EN VIVO</strong><div class="ni" style="color:var(--a)">Buscando noticias crypto en tiempo real...</div>`;
+  const ds=today.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:apiHeaders(),
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',max_tokens:1000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:`Analista de noticias crypto institucional. Busca las noticias más importantes del día. Devuelve SOLO JSON puro empezando con {: {"headlines":["titular 1","titular 2","titular 3","titular 4"],"sentiment":"BULLISH|BEARISH|NEUTRAL","bullish_catalysts":["cat1","cat2"],"bearish_risks":["riesgo1","riesgo2"],"macro_event":"evento macro más importante","regulatory":"noticias regulatorias relevantes o ninguna"}`,
+        messages:[{role:'user',content:`Fecha: ${ds}. Busca noticias crypto de hoy: ETF flows, Fed, regulación, on-chain, geopolítica. Solo JSON puro.`}]
+      })
+    });
+    const d=await r.json();
+    const text=d.content?.map(b=>b.type==='text'?b.text:'').join('')||'';
+    let p=null;
+    try{p=JSON.parse(text.trim());}catch(_){}
+    if(!p){const s=text.indexOf('{'),e=text.lastIndexOf('}');if(s!==-1&&e!==-1)try{p=JSON.parse(text.slice(s,e+1));}catch(_){}}
+    if(p?.headlines){
+      newsCtx=`NOTICIAS CRYPTO (${ds}):\n${p.headlines.map(h=>'• '+h).join('\n')}\nSentimiento general: ${p.sentiment}\nEvento macro clave: ${p.macro_event||'ninguno'}\nCatalizadores alcistas: ${(p.bullish_catalysts||[]).join(', ')}\nRiesgos bajistas: ${(p.bearish_risks||[]).join(', ')}\nRegulación: ${p.regulatory||'sin noticias regulatorias'}`;
+      const sc=p.sentiment==='BULLISH'?'var(--long)':p.sentiment==='BEARISH'?'var(--red)':'var(--yel)';
+      strip.innerHTML=`<strong>📰 NOTICIAS — <span style="color:${sc}">${p.sentiment}</span></strong>${p.headlines.map(h=>`<div class="ni">${esc(h)}</div>`).join('')}`;
+      newsLoaded=true;
+    }else throw new Error('parse fail');
+  }catch(e){
+    newsCtx=`Sin noticias disponibles (${today.toLocaleDateString('es-ES')})`;
+    strip.innerHTML=`<strong>📰 NOTICIAS</strong><div class="ni" style="color:var(--yel)">⚠ No disponibles — análisis técnico puro</div>`;
+  }
+}
+
+/* ══════════════════════════════
+   BUILD INDICATOR CONTEXT
+══════════════════════════════ */
+function buildIndCtx(sym){
+  const ind=indicators[sym],pr=live[sym];
+  if(!ind||!pr)return`${sym}: datos no disponibles`;
+  const fmt=n=>n?'$'+parseFloat(n).toLocaleString('en-US',{maximumFractionDigits:2}):'N/D';
+  return `━━━ ${sym}/USDT — DATOS REALES BINANCE ━━━
+Precio: $${pr.price.toLocaleString('en-US',{maximumFractionDigits:2})} (${pr.chg>=0?'+':''}${pr.chg.toFixed(2)}% 24h)
+RSI 1D: ${ind.rsi1d} | RSI 4H: ${ind.rsi4h} | RSI 1W: ${ind.rsi1w||'N/D'}
+EMA 21D: ${fmt(ind.ema21)} | EMA 50D: ${fmt(ind.ema50)} | EMA 200D: ${fmt(ind.ema200)}
+Precio vs EMA50: ${ind.priceAboveEMA50?'ARRIBA ↑':'ABAJO ↓'} | Precio vs EMA200: ${ind.priceAboveEMA200?'ARRIBA ↑':'ABAJO ↓'}
+Cruce EMA: ${ind.goldenCross?'GOLDEN CROSS (alcista)':'DEATH CROSS (bajista)'}
+MACD 1D: ${ind.macd?`línea=${ind.macd.line.toFixed(2)}, ${ind.macd.bullish?'ALCISTA':'BAJISTA'}${ind.macd.crossover?', CRUCE RECIENTE':''}`:  'N/D'}
+Bandas Bollinger: Upper=${fmt(ind.bb?.upper)} Mid=${fmt(ind.bb?.middle)} Lower=${fmt(ind.bb?.lower)} Ancho=${ind.bb?.width}%
+ATR 14D: ${ind.atr?'$'+ind.atr:'N/D'} (volatilidad real del activo)
+Volumen ratio vs promedio 20D: ${ind.volRatio}x (${parseFloat(ind.volRatio)>1.3?'ALTO — confirma movimientos':'BAJO — poca convicción'})
+Funding Rate: ${ind.fund!==null?ind.fund+'%'+( parseFloat(ind.fund)>0.05?' — longs pagando, riesgo de squeeze':parseFloat(ind.fund)<-0.01?' — shorts pagando, posible pump':'— neutro'):'N/D'}
+Estructura de mercado: ${ind.structure}
+Resistencia 20D: ${fmt(ind.high20d)} | Soporte 20D: ${fmt(ind.low20d)}
+Resistencia 4H (24 velas): ${fmt(ind.high4h)} | Soporte 4H: ${fmt(ind.low4h)}`;
+}
+
+/* ══════════════════════════════
+   PIPELINE UI
+══════════════════════════════ */
+function showPipeline(){
+  const steps=[
+    {id:'ps1',icon:'📡',name:'BINANCE — PRECIOS EN VIVO',desc:'Obteniendo ticker y datos de mercado en tiempo real'},
+    {id:'ps2',icon:'📊',name:'CÁLCULO DE INDICADORES REALES',desc:'RSI · EMA 21/50/200 · MACD · Bollinger · ATR · Volumen · Funding Rate'},
+    {id:'ps3',icon:'📰',name:'ANÁLISIS DE NOTICIAS',desc:'Búsqueda web de noticias crypto del día'},
+    {id:'ps4',icon:'🧠',name:'IA #1 — GENERADORA DE SEÑAL',desc:'Trader institucional analiza todos los datos y genera la señal candidata'},
+    {id:'ps5',icon:'🔍',name:'IA #2 — CONTROL INTERNO',desc:'Revisor escéptico verifica 14 criterios, evalúa 3 escenarios, puntúa la señal'},
+    {id:'ps6',icon:'✅',name:'VEREDICTO FINAL',desc:'Aprobada si score ≥ 7/10 · Rechazada si score < 7/10'},
+  ];
+  const html=steps.map(s=>`
+    <div class="pipe-step idle" id="${s.id}">
+      <div class="pipe-icon idle" id="${s.id}_icon">${s.icon}</div>
+      <div class="pipe-info">
+        <div class="pipe-name" id="${s.id}_name">${s.name}</div>
+        <div class="pipe-desc" id="${s.id}_desc">${s.desc}</div>
+      </div>
+      <div class="pipe-bar" id="${s.id}_bar"></div>
+    </div>`).join('');
+  document.getElementById('output').innerHTML=`
+    <div class="pipeline">
+      <div class="pipe-title">⚡ PIPELINE DE VERIFICACIÓN DOBLE IA</div>
+      <div class="pipe-steps">${html}</div>
+    </div>`;
+}
+
+function pipeStep(id,status,desc=''){
+  const step=document.getElementById(id);
+  const icon=document.getElementById(id+'_icon');
+  const name=document.getElementById(id+'_name');
+  const descEl=document.getElementById(id+'_desc');
+  if(!step)return;
+  const icons={running:'⟳',done:'✓',fail:'✗',warn:'⚠'};
+  const stateIcon=icons[status]||'○';
+  if(icon){icon.className='pipe-icon '+status;if(status!=='idle')icon.textContent=stateIcon;}
+  if(name)name.className='pipe-name '+status;
+  if(descEl&&desc){descEl.textContent=desc;descEl.className='pipe-desc active';}
+
+  // Start elapsed timer for running steps
+  if(status==='running'){
+    const start=Date.now();
+    const timerId='timer_'+id;
+    if(window[timerId])clearInterval(window[timerId]);
+    window[timerId]=setInterval(()=>{
+      const el=document.getElementById(id+'_name');
+      if(!el||!el.className.includes('running')){clearInterval(window[timerId]);return;}
+      const sec=((Date.now()-start)/1000).toFixed(0);
+      el.textContent=el.textContent.replace(/ \(\d+s\)$/,'')+` (${sec}s)`;
+    },1000);
+  } else {
+    const timerId='timer_'+id;
+    if(window[timerId]){clearInterval(window[timerId]);window[timerId]=null;}
+  }
+}
+
+/* ══════════════════════════════
+   SYSTEM PROMPT — IA #1 GENERATOR
+══════════════════════════════ */
+const SYS_GEN=`Eres el jefe de mesa de trading de un hedge fund institucional de criptomonedas con 15 años de experiencia. Generas señales de swing trading usando datos técnicos REALES de Binance.
+
+REGLAS ABSOLUTAS:
+- Solo señales con mínimo 4 factores de confluencia técnica reales
+- Apalancamiento máximo x3
+- R/B mínimo 1:2.5
+- Temporalidad elegida por ti según la estructura más clara (4H/1D/1W)
+- Los indicadores que recibes son REALES — úsalos tal cual
+
+FORMATO DE RESPUESTA (exacto, en español):
+ACTIVO: [BTC/ETH/SOL]
+DIRECCIÓN: [LONG/SHORT]
+APALANCAMIENTO: [x2/x3]
+TEMPORALIDAD: [4H/1D/1W] | [razón en 5 palabras]
+ENTRADA: [$X,XXX – $X,XXX]
+STOP LOSS: $[X,XXX]
+TP1: $[X,XXX]
+TP2: $[X,XXX]
+TP3: $[X,XXX]
+RATIO R/B: [1:X.X]
+PROBABILIDAD: [XX%]
+VALIDEZ: [Xh]
+
+ANÁLISIS TÉCNICO:
+[Usa los datos reales. 6-8 líneas: tendencia, EMAs, RSI multi-temporal, MACD, Bollinger, ATR, estructura, volumen, funding rate. Sé específico con valores reales.]
+
+IMPACTO DE NOTICIAS:
+[2-3 líneas: cómo las noticias apoyan o contradicen la señal]
+
+NO ENTRAR SI:
+[condición exacta de invalidación]
+
+Si no hay mínimo 4 factores de confluencia reales, responde:
+SIN SEÑAL: [razón usando los datos reales]`;
+
+/* ══════════════════════════════
+   SYSTEM PROMPT — IA #2 REVIEWER
+══════════════════════════════ */
+const SYS_REV=`Eres el jefe de risk management de un hedge fund institucional. Tu rol es REVISAR y CRITICAR señales de trading antes de que lleguen al trader. Eres escéptico, exigente y proteges el capital por encima de todo.
+
+Recibirás una señal candidata con todos los datos técnicos reales. Debes evaluarla en 14 criterios y decidir si se aprueba o rechaza.
+
+CRITERIOS DE EVALUACIÓN (puntúa cada uno de 0 a 1):
+1. RSI multi-temporal coherente con la dirección (1D + 4H alineados)
+2. EMA 50/200 soportan la dirección del trade
+3. MACD confirma (línea en la dirección correcta)
+4. Volumen confirma (ratio > 1.0x promedio)
+5. Funding rate no indica trampa (no extremo contrario al trade)
+6. Estructura de mercado (HH/HL para long, LH/LL para short)
+7. Stop Loss bien colocado en estructura real (no arbitrario)
+8. TP1 alcanzable y realista con los niveles de resistencia/soporte reales
+9. Ratio R/B es realmente ≥ 1:2.5 verificando los niveles dados
+10. Bollinger Bands apoyan el trade (no sobreextensión extrema)
+11. ATR justifica el tamaño de SL (SL ≥ 1.5x ATR del activo)
+12. Noticias del día no contradicen la señal
+13. No hay evento macro de alto impacto en las próximas 8 horas
+14. Señal es apta para swing (no scalp disfrazado)
+
+FORMATO DE RESPUESTA EXACTO (JSON puro, sin backticks, empezando con {):
+{
+  "score": 8,
+  "approved": true,
+  "verdict": "APROBADA",
+  "verdict_reason": "La señal tiene 11 de 14 criterios positivos. RSI 4H y 1D alineados alcistas, volumen 1.4x promedio, MACD con cruce reciente.",
+  "checks": [
+    {"criterion": "RSI multi-temporal", "pass": true, "detail": "RSI 1D: 48 neutral-alcista, RSI 4H: 42 rebotando desde sobreventa"},
+    {"criterion": "EMA 50/200", "pass": true, "detail": "Precio sobre EMA50, golden cross activo"},
+    {"criterion": "MACD", "pass": true, "detail": "Línea MACD positiva y cruce reciente"},
+    {"criterion": "Volumen", "pass": true, "detail": "Ratio 1.4x — confirma el movimiento"},
+    {"criterion": "Funding Rate", "pass": true, "detail": "0.01% — neutro, sin riesgo de squeeze"},
+    {"criterion": "Estructura mercado", "pass": true, "detail": "HH/HL confirmado en 1D"},
+    {"criterion": "Stop Loss estructura", "pass": true, "detail": "SL en soporte clave real $X"},
+    {"criterion": "TP1 realista", "pass": true, "detail": "TP1 en resistencia probada $X"},
+    {"criterion": "Ratio R/B verificado", "pass": true, "detail": "Calculado: 1:2.8 — correcto"},
+    {"criterion": "Bollinger Bands", "pass": false, "detail": "Precio cerca de banda superior — riesgo de reversión"},
+    {"criterion": "ATR vs SL", "pass": true, "detail": "SL = 2.1x ATR — bien posicionado"},
+    {"criterion": "Noticias coherentes", "pass": true, "detail": "Noticias neutras-positivas, sin conflicto"},
+    {"criterion": "Sin evento macro", "pass": false, "detail": "CPI en 6 horas — riesgo de volatilidad"},
+    {"criterion": "Swing válido", "pass": true, "detail": "Validez 48h coherente con temporalidad 1D"}
+  ],
+  "scenarios": {
+    "base": "El precio consolida en la zona de entrada y rompe al alza hacia TP1 en 24-48h con volumen normal. Probabilidad: 55%.",
+    "bull": "Noticias positivas aceleran el movimiento, TP2 alcanzado en 12h. Mover SL a BE inmediatamente tras TP1. Probabilidad: 25%.",
+    "bear": "Precio rechaza la entrada y activa el SL. Posible si CPI sale por encima de expectativas. Probabilidad: 20%."
+  },
+  "adjustments": "Reducir tamaño de posición al 50% por el CPI pendiente. Entrar solo en la mitad inferior de la zona de entrada.",
+  "risk_warnings": ["CPI en 6h puede generar volatilidad extrema", "Bollinger superior cercano limita el upside a corto plazo"]
+}`;
+
+/* ══════════════════════════════
+   GENERATE SIGNAL — FULL PIPELINE
+══════════════════════════════ */
+async function genSignal(){
+  const asset=document.getElementById('asset').value;
+  const btn=document.getElementById('btn-sig');
+  btn.disabled=true;
+  showPipeline();
+
+  try{
+    // STEP 1 — Live prices
+    pipeStep('ps1','running','Conectando a Binance API...');
+    await fetchBinanceTicker();
+    pipeStep('ps1','done',`BTC $${live.BTC?.price?.toLocaleString('en-US',{maximumFractionDigits:0})||'—'} · ETH $${live.ETH?.price?.toFixed(2)||'—'} · SOL $${live.SOL?.price?.toFixed(2)||'—'}`);
+
+    // STEP 2 — Indicators
+    pipeStep('ps2','running','Descargando velas y calculando indicadores...');
+    const syms=asset==='ALL'?['BTC','ETH','SOL']:[asset];
+    await Promise.all(syms.map(s=>calcIndicators(s)));
+    const firstInd=indicators[syms[0]];
+    pipeStep('ps2','done',`RSI1D:${firstInd?.rsi1d||'—'} EMA50:${firstInd?.ema50?'$'+parseFloat(firstInd.ema50).toLocaleString('en-US',{maximumFractionDigits:0}):'—'} MACD:${firstInd?.macd?.bullish?'BULL':'BEAR'} Vol:${firstInd?.volRatio||'—'}x`);
+
+    // STEP 3 — News
+    pipeStep('ps3','running','Buscando noticias crypto en tiempo real...');
+    if(!newsLoaded)await fetchNews();
+    pipeStep('ps3','done',newsLoaded?'Noticias cargadas y procesadas':'Usando análisis técnico puro');
+
+    // STEP 4 — IA #1 Generate
+    pipeStep('ps4','running','Analizando confluencias y generando señal candidata... (20-40s)');
+    const indCtx=syms.map(s=>buildIndCtx(s)).join('\n\n');
+    const fgLine=live._fg?`Fear & Greed: ${live._fg.value} (${live._fg.value_classification.toUpperCase()})`:'';
+    const ds=today.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+    const genMsg=`Fecha: ${ds}\n\n${indCtx}\n\n${fgLine}\n\n${newsCtx||'Sin noticias'}\n\nACTIVO: ${asset==='ALL'?'BTC, ETH y SOL — analiza cada uno':asset}\n\nGenera la señal usando los datos reales. Sé específico con los niveles.`;
+
+    // Timeout helper
+    const fetchWithTimeout = (url, opts, ms=90000) => {
+      const ctrl = new AbortController();
+      const tid = setTimeout(()=>ctrl.abort(), ms);
+      return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+    };
+
+    const r1=await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:apiHeaders(),
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:SYS_GEN,messages:[{role:'user',content:genMsg}]})
+    });
+    if(!r1.ok){
+      const errBody = await r1.text().catch(()=>'');
+      throw new Error(`API IA#1 error ${r1.status}: ${errBody.slice(0,200)}`);
+    }
+    const d1=await r1.json();
+    if(d1.error)throw new Error('IA#1: '+d1.error.message);
+    const signalText=d1.content?.map(b=>b.text||'').join('')||'';
+    if(!signalText) throw new Error('IA#1 devolvió respuesta vacía. Intenta nuevamente.');
+
+    if(/^SIN SEÑAL:/im.test(signalText)||signalText.includes('NO HAY OPERACIONES')){
+      pipeStep('ps4','warn','IA Generadora: no encontró confluencia suficiente');
+      pipeStep('ps5','idle','');pipeStep('ps6','fail','Sin señal que revisar');
+      const reason=signalText.replace(/^SIN SEÑAL:\s*/im,'').replace('NO HAY OPERACIONES SEGURAS EN ESTE MOMENTO','').trim();
+      const pipe=document.getElementById('output').querySelector('.pipeline')?.outerHTML||'';
+      document.getElementById('output').innerHTML=pipe+`<div class="nosig"><div class="nosig-icon">🚫</div><div class="nosig-t">SIN SEÑAL VÁLIDA</div><div class="nosig-s">${esc(reason)||'Los indicadores reales no presentan confluencia suficiente para operar con seguridad.'}</div></div>`;
+      return;
+    }
+    pipeStep('ps4','done','✓ Señal candidata generada — enviando a control interno...');
+
+    // STEP 5 — IA #2 Review
+    pipeStep('ps5','running','Verificando 14 criterios · Evaluando 3 escenarios · Calculando score... (15-30s)');
+    const revMsg=`Fecha: ${ds}\n\nSEÑAL CANDIDATA A REVISAR:\n${signalText}\n\nDATOS TÉCNICOS REALES:\n${indCtx}\n\nNOTICIAS:\n${newsCtx||'Sin noticias'}\n\nEvalúa esta señal con los 14 criterios. Responde solo JSON puro empezando con {`;
+
+    const r2=await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:apiHeaders(),
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:SYS_REV,messages:[{role:'user',content:revMsg}]})
+    });
+    if(!r2.ok){
+      const errBody2 = await r2.text().catch(()=>'');
+      throw new Error(`API IA#2 error ${r2.status}: ${errBody2.slice(0,200)}`);
+    }
+    const d2=await r2.json();
+    if(d2.error)throw new Error('IA#2: '+d2.error.message);
+    const revRaw=d2.content?.map(b=>b.text||'').join('')||'';
+
+    let review=null;
+    try{review=JSON.parse(revRaw.trim());}catch(_){}
+    if(!review){const s=revRaw.indexOf('{'),e=revRaw.lastIndexOf('}');if(s!==-1&&e!==-1)try{review=JSON.parse(revRaw.slice(s,e+1));}catch(_){}}
+
+    if(!review){
+      pipeStep('ps5','warn','No se pudo parsear la revisión — aprobando con precaución');
+      review={score:6,approved:true,verdict:'PRECAUCIÓN',verdict_reason:'Revisión no procesable — proceder con precaución',checks:[],scenarios:{base:'Escenario no analizado',bull:'',bear:''},adjustments:'',risk_warnings:[]};
+    }
+
+    const score=review.score||0;
+    pipeStep('ps5','done',`Score: ${score}/10 · ${(review.checks||[]).filter(c=>c.pass).length} de 14 criterios aprobados`);
+
+    // STEP 6 — Verdict
+    if(score<7||review.approved===false){
+      pipeStep('ps6','fail',`RECHAZADA (score ${score}/10) — Señal no cumple el estándar de calidad`);
+      renderRejected(review,signalText);
+    }else{
+      pipeStep('ps6','done',`APROBADA (score ${score}/10) — Señal liberada al trader`);
+      renderSignal(signalText,asset,review);
+    }
+
+  }catch(e){
+    const isKey = e.message.includes('API Key') || e.message.includes('api key');
+    const isCors = e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('CORS') || e.message.includes('fetch');
+    const isAuth = e.message.includes('401') || e.message.includes('403') || e.message.includes('authentication');
+    const isRate = e.message.includes('429') || e.message.includes('rate');
+
+    let msg = '', fix = '';
+    if(isKey){
+      msg = '🔑 Falta la API Key';
+      fix = 'Haz click en el botón <strong>🔑 API KEY</strong> arriba a la derecha y pega tu key de Anthropic.';
+    } else if(isCors){
+      msg = '🌐 Error de conexión (CORS/Red)';
+      fix = `El navegador bloquea llamadas desde archivos locales.<br><br>
+<strong>Solución:</strong> Abre la app desde un servidor local:<br><br>
+<span style="color:var(--a);font-size:9px">Opción 1 — Python (recomendado):</span><br>
+<span style="color:var(--a2);font-size:9px">1. Abre Terminal / CMD<br>
+2. Escribe: <strong>cd</strong> y arrastra la carpeta donde está el HTML<br>
+3. Escribe: <strong>python -m http.server 8080</strong><br>
+4. Abre Chrome en: <strong>http://localhost:8080/crypto-signals.html</strong></span><br><br>
+<span style="color:var(--a);font-size:9px">Opción 2 — VS Code:</span><br>
+<span style="color:var(--a2);font-size:9px">Instala extensión "Live Server", click derecho en el archivo → "Open with Live Server"</span>`;
+    } else if(isAuth){
+      msg = '🔑 API Key inválida o sin créditos';
+      fix = 'Verifica que la key sea correcta en <strong>console.anthropic.com</strong> → API Keys. También verifica que tengas créditos en Billing.';
+    } else if(isRate){
+      msg = '⏱ Límite de requests alcanzado';
+      fix = 'Espera 1 minuto e intenta nuevamente.';
+    } else {
+      msg = '⚠ Error: '+e.message;
+      fix = 'Verifica tu conexión a internet e intenta nuevamente.';
+    }
+
+    const pipe = document.getElementById('output').querySelector('.pipeline')?.outerHTML||'';
+    document.getElementById('output').innerHTML = pipe + `
+      <div class="err-box" style="line-height:1.9">
+        <div style="font-family:var(--head);font-size:13px;letter-spacing:2px;margin-bottom:8px">${msg}</div>
+        <div style="font-size:10px">${fix}</div>
+        <div style="margin-top:12px;font-size:8px;color:var(--txd);border-top:1px solid rgba(255,179,0,.15);padding-top:8px">Error técnico: ${esc(e.message)}</div>
+      </div>`;
+  }finally{btn.disabled=false;}
+}
+
+/* ══════════════════════════════
+   RENDER REJECTED
+══════════════════════════════ */
+function renderRejected(review,signal){
+  const passCount=(review.checks||[]).filter(c=>c.pass).length;
+  const failChecks=(review.checks||[]).filter(c=>!c.pass);
+  const out=document.getElementById('output');
+  const existing=out.querySelector('.pipeline');
+  const pipeline=existing?existing.outerHTML:'';
+
+  const rejHTML=`
+  <div class="rejected-sig">
+    <div class="rej-icon">🛑</div>
+    <div class="rej-t">SEÑAL RECHAZADA — SCORE ${review.score}/10</div>
+    <div class="rej-s">${esc(review.verdict_reason||'No cumple el estándar mínimo de calidad.')}</div>
+    ${failChecks.length?`<div style="margin-top:12px;text-align:left;font-size:9px;color:var(--txd);line-height:1.7">
+      <div style="color:var(--yel);letter-spacing:1px;margin-bottom:5px;font-family:var(--head);font-size:8px;">CRITERIOS FALLIDOS:</div>
+      ${failChecks.map(c=>`<div>✗ <span style="color:var(--red)">${esc(c.criterion)}</span> — ${esc(c.detail)}</div>`).join('')}
+    </div>`:''}
+  </div>`;
+
+  out.innerHTML=pipeline+rejHTML;
+}
+
+/* ══════════════════════════════
+   RENDER SIGNAL + REVIEW
+══════════════════════════════ */
+function renderSignal(text,asset,review){
+  const out=document.getElementById('output');
+  const pipeline=out.querySelector('.pipeline')?.outerHTML||'';
+
+  if(!/LONG|SHORT/i.test(text)){out.innerHTML=pipeline+`<div class="raw-out">${esc(text)}</div>`;return;}
+
+  const gL=(p,fb='—')=>{const m=text.match(p);return m?m[1].trim().replace(/\*/g,''):fb;};
+  const assetM=text.match(/^ACTIVO:\s*([^\n]+)/im);
+  const sym=assetM?assetM[1].trim().split('/')[0].trim():(asset==='ALL'?'MULTI':asset);
+  const type=/\bDIRECCIÓN:\s*(LONG|SHORT)/i.exec(text)?.[1]?.toUpperCase()||/\b(LONG|SHORT)\b/i.exec(text)?.[1]?.toUpperCase()||'—';
+  const lev=(/\bAPALANCAMIENTO:\s*(x[23])/i.exec(text)?.[1]||/\b(x[23])\b/i.exec(text)?.[1]||'x2').toUpperCase();
+  const tfM=text.match(/TEMPORALIDAD:\s*([^\|\n]+)/i);
+  const tfRaw=tfM?tfM[1].trim():'—';
+  const tfNoteM=text.match(/TEMPORALIDAD:[^\|\n]*\|\s*([^\n]+)/i);
+  const tfNote=tfNoteM?tfNoteM[1].trim():'';
+  const entry=gL(/ENTRADA:\s*([^\n]+)/i);
+  const sl=gL(/STOP\s*LOSS:\s*([^\n]+)/i);
+  const tp1=gL(/TP1:\s*([^\n]+)/i),tp2=gL(/TP2:\s*([^\n]+)/i),tp3=gL(/TP3:\s*([^\n]+)/i);
+  const rr=gL(/RATIO\s+R\/B:\s*([^\n]+)/i)!=='—'?gL(/RATIO\s+R\/B:\s*([^\n]+)/i):(text.match(/1:[0-9.]+/)?.[0]||'—');
+  const probM=text.match(/PROBABILIDAD:\s*([0-9]+)%/i);
+  const prob=probM?parseInt(probM[1]):null;
+  const validezM=text.match(/VALIDEZ:\s*([0-9]+)\s*h/i);
+  const expiryH=validezM?parseInt(validezM[1]):72;
+  const techM=text.match(/ANÁLISIS TÉCNICO:\n([\s\S]*?)(?=\nIMPACTO DE NOTICIAS:|$)/i);
+  const tech=techM?techM[1].trim():'';
+  const newsM=text.match(/IMPACTO DE NOTICIAS:\n([\s\S]*?)(?=\nNO ENTRAR SI:|$)/i);
+  const newsImpact=newsM?newsM[1].trim():'';
+  const invalM=text.match(/NO ENTRAR SI:\s*([^\n]+)/i);
+  const inval=invalM?invalM[1].trim():'—';
+  const isL=type==='LONG';
+  const pid='pb_'+Date.now(),eid='ex_'+Date.now();
+  const exMs=Date.now()+expiryH*3600000;
+  const exAt=new Date(exMs);
+  const exStr=exAt.toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short'})+' '+exAt.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const entryNum=parseFloat((entry.match(/[\d,]+\.?\d*/)||['0'])[0].replace(/,/g,''));
+  const tp1Num=parseFloat((tp1.match(/[\d,]+\.?\d*/)||['0'])[0].replace(/,/g,''));
+  const tp1Pct=entryNum&&tp1Num?((isL?(tp1Num-entryNum):entryNum-tp1Num)/entryNum*100).toFixed(1):null;
+  const ind=indicators[sym];
+
+  // Score color
+  const sc=review.score;
+  const scoreClass=sc>=9?'score-10':sc>=7?'score-7':sc>=5?'score-5':'score-3';
+
+  // Check items
+  const checksHtml=(review.checks||[]).map(c=>`
+    <div class="check-item">
+      <div class="check-icon">${c.pass?'✅':'❌'}</div>
+      <div class="check-text">
+        <div class="check-name">${esc(c.criterion||'')}</div>
+        <div class="check-val ${c.pass?'check-pass':'check-fail'}">${esc(c.detail||'')}</div>
+      </div>
+    </div>`).join('');
+
+  // Scenarios
+  const scHtml=review.scenarios?`
+    ${review.scenarios.base?`<div class="scenario sc-base"><div class="sc-label">📊 ESCENARIO BASE</div>${esc(review.scenarios.base)}</div>`:''}
+    ${review.scenarios.bull?`<div class="scenario sc-bull"><div class="sc-label">🟢 ESCENARIO ALCISTA</div>${esc(review.scenarios.bull)}</div>`:''}
+    ${review.scenarios.bear?`<div class="scenario sc-bear"><div class="sc-label">🔴 ESCENARIO BAJISTA</div>${esc(review.scenarios.bear)}</div>`:''}
+  `:'';
+
+  // Live indicators in card
+  const indHtml=ind?`
+    <div class="live-inds">
+      <div class="li-box"><div class="li-lbl">RSI 1D</div><div class="li-val" style="color:${parseFloat(ind.rsi1d)>70?'var(--red)':parseFloat(ind.rsi1d)<30?'var(--long)':'var(--yel)'}">${ind.rsi1d||'—'}</div></div>
+      <div class="li-box"><div class="li-lbl">RSI 4H</div><div class="li-val" style="color:${parseFloat(ind.rsi4h)>70?'var(--red)':parseFloat(ind.rsi4h)<30?'var(--long)':'var(--yel)'}">${ind.rsi4h||'—'}</div></div>
+      <div class="li-box"><div class="li-lbl">EMA 50</div><div class="li-val" style="color:${ind.priceAboveEMA50?'var(--long)':'var(--red)'}">$${parseFloat(ind.ema50||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div></div>
+      <div class="li-box"><div class="li-lbl">EMA 200</div><div class="li-val" style="color:${ind.priceAboveEMA200?'var(--long)':'var(--red)'}">$${parseFloat(ind.ema200||0).toLocaleString('en-US',{maximumFractionDigits:0})}</div></div>
+      <div class="li-box"><div class="li-lbl">MACD</div><div class="li-val" style="color:${ind.macd?.bullish?'var(--long)':'var(--red)'}">${ind.macd?.bullish?'BULL':'BEAR'}</div></div>
+      ${ind.fund!==null&&ind.fund!==undefined?`<div class="li-box"><div class="li-lbl">FUNDING</div><div class="li-val" style="color:${parseFloat(ind.fund)>0.05?'var(--red)':parseFloat(ind.fund)<-0.01?'var(--long)':'var(--tx)'};font-size:10px">${ind.fund}%</div></div>`:''}
+    </div>`:'';
+
+  const sigHTML=`
+  <div class="review-panel">
+    <div class="review-hdr">
+      <div class="review-title">🔍 REPORTE DE CONTROL INTERNO — IA REVISORA</div>
+      <div class="review-score">
+        <div>
+          <div class="score-num ${scoreClass}">${sc}/10</div>
+          <div class="score-label">SCORE DE CALIDAD</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-verdict ${review.approved?'rv-approved':'rv-rejected'}">
+      <div class="rv-icon">${review.approved?'✅':'🛑'}</div>
+      <div class="rv-text">
+        <div class="rv-verdict">SEÑAL ${review.verdict||'APROBADA'}</div>
+        <div class="rv-reason">${esc(review.verdict_reason||'')}${review.adjustments?'<br><span style="color:var(--yel)">⚠ AJUSTE: '+esc(review.adjustments)+'</span>':''}</div>
+      </div>
+    </div>
+    ${checksHtml?`<div class="review-checks"><div class="checks-title">VERIFICACIÓN DE 14 CRITERIOS</div><div class="check-grid">${checksHtml}</div></div>`:''}
+    ${scHtml?`<div class="review-scenarios"><div class="scenarios-title">ANÁLISIS DE ESCENARIOS</div>${scHtml}</div>`:''}
+    ${(review.risk_warnings||[]).length?`<div style="padding:0 15px 12px;font-size:9px;color:var(--yel);line-height:1.7">${review.risk_warnings.map(w=>`⚠ ${esc(w)}`).join('<br>')}</div>`:''}
+  </div>
+
+  <div class="sig">
+    <div class="dir-b ${isL?'dir-long':'dir-short'}">
+      <div class="dir-l">
+        <div class="dir-asset">${esc(sym)}</div>
+        <div class="dir-type">${type} ${isL?'↑':'↓'}</div>
+      </div>
+      <div class="badges">
+        <span class="bdg ${isL?'bl':'bs'}">${type}</span>
+        <span class="bdg bv">${esc(lev)}</span>
+        <span class="bdg bt">${esc(tfRaw.split('|')[0].trim())}</span>
+        <span class="bdg bq">SCORE ${sc}/10</span>
+      </div>
+    </div>
+    <div class="sig-body">
+      ${tfNote?`<div class="tf-note">📊 TF: ${esc(tfNote)}</div>`:''}
+      ${indHtml}
+      <div class="levels">
+        <div class="lv"><div class="lv-l">ZONA DE ENTRADA</div><div class="lv-v ve">${esc(entry)}</div></div>
+        <div class="lv"><div class="lv-l">STOP LOSS</div><div class="lv-v vs">${esc(sl)}</div></div>
+      </div>
+      <div class="tps">
+        <div class="tp tp1"><div class="tp-l">TP1 — 40%</div><div class="tp-v">${esc(tp1)}</div>${tp1Pct?`<div class="tp-d">${isL?'+':'-'}${tp1Pct}% · mover SL a BE</div>`:''}</div>
+        <div class="tp tp2"><div class="tp-l">TP2 — 35%</div><div class="tp-v">${esc(tp2)}</div></div>
+        <div class="tp tp3"><div class="tp-l">TP3 — 25%</div><div class="tp-v">${esc(tp3)}</div></div>
+      </div>
+      <div class="meta-row">
+        <div class="meta"><div class="meta-l">RATIO R/B</div><div class="meta-v">${esc(rr)}</div></div>
+        ${prob?`<div class="meta"><div class="meta-l">PROBABILIDAD</div><div class="meta-v">${prob}%</div></div>`:''}
+        <div class="meta"><div class="meta-l">VALIDEZ</div><div class="meta-v">${expiryH}H</div></div>
+      </div>
+      ${prob?`<div class="pbar-w"><div class="pbar-top"><span>CONFLUENCIA REAL</span><span>${prob}%</span></div><div class="pbar-track"><div class="pbar-fill" id="${pid}" style="width:0%"></div></div></div>`:''}
+      ${tech?`<div class="section"><div class="sec-t">📊 ANÁLISIS TÉCNICO — DATOS REALES BINANCE</div><div class="sec-body">${fmtL(tech)}</div></div>`:''}
+      ${newsImpact?`<div class="section news-sec"><div class="sec-t">📰 IMPACTO DE NOTICIAS</div><div class="sec-body">${fmtL(newsImpact)}</div></div>`:''}
+      <div class="inval">${esc(inval)}</div>
+      <div class="expiry exp-v" id="${eid}">
+        <div class="exp-row">
+          <div class="exp-meta"><span class="exp-lbl">⏱ VÁLIDA HASTA</span><span class="exp-when">${exStr}</span></div>
+          <div class="exp-cd" id="cd_${eid}">--:--:--</div>
+          <span class="exp-st" id="st_${eid}">ACTIVA</span>
+        </div>
+        <div class="exp-track"><div class="exp-fill" id="ef_${eid}" style="width:100%;background:var(--long)"></div></div>
+      </div>
+    </div>
+  </div>`;
+
+  out.innerHTML=pipeline+sigHTML;
+  if(prob)setTimeout(()=>{const b=document.getElementById(pid);if(b)b.style.width=prob+'%';},150);
+  startCountdown(eid,exMs,expiryH*3600000);
+  addTrack({id:eid,asset:sym,type,lev,entry,sl,tp1,tp2,tp3,rr,prob,score:sc,tf:tfRaw.split('|')[0].trim(),ts:new Date().toLocaleString('es-ES'),result:null,exMs});
+}
+
+/* ══════════════════════════════
+   COUNTDOWN
+══════════════════════════════ */
+function startCountdown(eid,exMs,totMs){
+  if(_timers[eid])clearInterval(_timers[eid]);
+  const tick=()=>{
+    const rem=exMs-Date.now();
+    const bar=document.getElementById(eid),cd=document.getElementById('cd_'+eid),st=document.getElementById('st_'+eid),ef=document.getElementById('ef_'+eid);
+    if(!cd){clearInterval(_timers[eid]);return;}
+    if(rem<=0){cd.textContent='00:00:00';bar&&(bar.className='expiry exp-x');st&&(st.textContent='VENCIDA');ef&&(ef.style.width='0%',ef.style.background='var(--red)');clearInterval(_timers[eid]);return;}
+    const pct=Math.max(0,(rem/totMs)*100);
+    const h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000),s=Math.floor((rem%60000)/1000);
+    cd.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    bar&&(bar.className='expiry '+(pct>30?'exp-v':'exp-w'));
+    st&&(st.textContent=pct>30?'ACTIVA':pct>10?'EXPIRA PRONTO':'ÚLTIMO AVISO');
+    ef&&(ef.style.width=pct+'%',ef.style.background=pct>30?'var(--long)':pct>10?'var(--yel)':'var(--red)');
+  };
+  tick();_timers[eid]=setInterval(tick,1000);
+}
+
+/* ══════════════════════════════
+   TRACKER
+══════════════════════════════ */
+function addTrack(s){tracker.unshift(s);if(tracker.length>50)tracker.pop();saveT();updateStats();}
+function saveT(){localStorage.setItem('apex6_tracker',JSON.stringify(tracker));}
+function setResult(id,res){const s=tracker.find(t=>t.id===id);if(s){s.result=res;saveT();updateStats();}}
+function removeT(id){tracker=tracker.filter(t=>t.id!==id);saveT();updateStats();}
+function clearAll(){if(confirm('¿Limpiar historial?')){tracker=[];saveT();updateStats();}}
+function updateStats(){
+  const cl=tracker.filter(t=>t.result),win=cl.filter(t=>t.result!=='SL'),loss=cl.filter(t=>t.result==='SL');
+  const wr=cl.length?Math.round(win.length/cl.length*100):null;
+  document.getElementById('s-tot').textContent=tracker.length;
+  document.getElementById('s-win').textContent=win.length;
+  document.getElementById('s-loss').textContent=loss.length;
+  const wrEl=document.getElementById('s-wr');
+  wrEl.textContent=wr!=null?wr+'%':'—';
+  wrEl.style.color=wr===null?'var(--a2)':wr>=65?'var(--long)':wr>=50?'var(--yel)':'var(--red)';
+  renderTracker();
+}
+function renderTracker(){
+  const el=document.getElementById('trk-list');
+  if(!tracker.length){el.innerHTML='<div class="trk-empty">SIN SEÑALES — GENERA UNA PARA EMPEZAR</div>';return;}
+  el.innerHTML=tracker.map(s=>{
+    const exp=s.exMs&&Date.now()>s.exMs&&!s.result;
+    const res=s.result
+      ?`<span class="${s.result==='SL'?'done-l':'done-w'}">${s.result==='SL'?'✗ SL':'✓ '+s.result}</span>`
+      :`<div class="trk-res"><button class="rb rb-tp1" onclick="setResult('${s.id}','TP1')">TP1</button><button class="rb rb-tp2" onclick="setResult('${s.id}','TP2')">TP2</button><button class="rb rb-tp3" onclick="setResult('${s.id}','TP3')">TP3</button><button class="rb rb-sl" onclick="setResult('${s.id}','SL')">SL</button></div>`;
+    return`<div class="trk-i"><div class="trk-sym" style="${s.type==='SHORT'?'color:var(--red)':''}">${esc(s.asset)}</div><div class="trk-meta"><span class="trk-type">${s.type}·${s.tf}·${s.lev}·Score:${s.score||'—'}·${esc(s.ts)}${exp?' <span style="color:var(--red);font-size:7px">EXP</span>':''}</span><span class="trk-en">E:${esc(s.entry)} SL:${esc(s.sl)}</span></div>${res}<button class="trk-x" onclick="removeT('${s.id}')">×</button></div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════
+   EVENTS
+══════════════════════════════ */
+const SYS_EV=`Eres un analista macro de hedge fund crypto. Tu única tarea es generar un JSON con los eventos económicos del día.
+
+INSTRUCCIÓN CRÍTICA: Responde ÚNICAMENTE con el objeto JSON. La primera letra de tu respuesta debe ser { y la última }. Cero texto antes o después.
+
+Formato exacto:
+{"verdict":"OPERAR","verdict_reason":"razón breve","summary":"resumen 2-3 frases","events":[{"time":"08:30 EST","name":"Nombre evento","country":"USA","impact":"HIGH","signal":"EVITAR","note":"impacto en BTC max 10 palabras"}]}
+
+Reglas de valores:
+- verdict: OPERAR, ESPERAR o PRECAUCION (sin tilde)
+- impact: HIGH, MEDIUM o LOW
+- signal: EVITAR, PRECAUCION u OPERAR (sin tilde)
+
+Incluye: Fed, CPI, NFP, GDP, ISM, jobless claims, hablas Fed, bancos centrales, regulación crypto, geopolítica importante.`;
+
+async function loadEvents(){
+  const btn=document.getElementById('btn-ev'),out=document.getElementById('ev-out');
+  btn.disabled=true;
+  out.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:30px;font-size:9px;color:var(--txd);letter-spacing:2px;"><div class="t-spin" style="width:14px;height:14px;border-width:1.5px"></div>ANALIZANDO CALENDARIO...</div>`;
+  const ds=today.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const btcP=live.BTC?.price?'$'+Math.round(live.BTC.price).toLocaleString():'aprox $71,000';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders(),
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1500,system:SYS_EV,messages:[{role:'user',content:`Hoy es ${ds}. BTC ${btcP}. Eventos relevantes para traders crypto. Solo JSON puro con {`}]})
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();if(d.error)throw new Error(d.error.message);
+    const raw=d.content?.map(b=>b.text||'').join('')||'';
+    let p=null;
+    try{p=JSON.parse(raw.trim());}catch(_){}
+    if(!p){const s=raw.indexOf('{'),e=raw.lastIndexOf('}');if(s!==-1&&e!==-1)try{p=JSON.parse(raw.slice(s,e+1));}catch(_){}}
+    if(!p)throw new Error('Parse fallido');
+    renderEvents(p);
+  }catch(e){
+    out.innerHTML=`<div class="err-box">⚠ ${esc(e.message)}<br><button onclick="loadEvents()" style="margin-top:8px;background:transparent;border:1px solid var(--yel);color:var(--yel);font-family:var(--mono);font-size:8px;padding:5px 12px;border-radius:2px;cursor:pointer;letter-spacing:1px;">↻ REINTENTAR</button></div>`;
+  }finally{btn.disabled=false;}
+}
+
+function renderEvents(data){
+  const out=document.getElementById('ev-out');
+  const N=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+  const vd=N(data.verdict);
+  const vm={OPERAR:{cls:'v-op',icon:'✅',label:'OPERAR'},ESPERAR:{cls:'v-es',icon:'🚫',label:'ESPERAR'},PRECAUCION:{cls:'v-ca',icon:'⚠️',label:'PRECAUCIÓN'}}[vd]||{cls:'v-ca',icon:'⚠️',label:'PRECAUCIÓN'};
+  const ic={HIGH:'ih',MEDIUM:'im',LOW:'il'},sc={EVITAR:'se',PRECAUCION:'sc',OPERAR:'so'},sl2={EVITAR:'EVITAR',PRECAUCION:'PRECAUCIÓN',OPERAR:'OPERAR'};
+  const evH=(data.events||[]).map(ev=>{const imp=N(ev.impact),sig=N(ev.signal);return`<div class="ev-i"><div class="ev-time">${esc(ev.time||'—')}</div><div class="ev-dot ${ic[imp]||'il'}"></div><div class="ev-inf"><div class="ev-nm">${esc(ev.name||'')}</div><div class="ev-nt">${esc(ev.country||'')}${ev.note?' · '+ev.note:''}</div></div><span class="evsig ${sc[sig]||'sc'}">${sl2[sig]||esc(ev.signal||'')}</span></div>`;}).join('');
+  out.innerHTML=`<div class="verdict ${vm.cls}"><div class="v-ico">${vm.icon}</div><div class="v-bd"><div class="v-tit">${vm.label} HOY</div><div class="v-reason">${esc(data.verdict_reason||'')}</div></div></div>${data.summary?`<div class="sumbox"><strong>RESUMEN MACRO</strong>${esc(data.summary)}</div>`:''}<div class="ev-list">${evH}</div>`;
+}
+
+/* ══════════════════════════════
+   TAB + UTILS
+══════════════════════════════ */
+function sw(t){['signals','tracker','events'].forEach((n,i)=>{document.querySelectorAll('.tab')[i].classList.toggle('on',n===t);document.getElementById('tab-'+n).classList.toggle('on',n===t);});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtL(text){return text.split('\n').map(l=>{const c=l.replace(/\*\*/g,'').replace(/\*/g,'').trim();return c?`<span>${esc(c)}</span><br>`:'';}).join('');}
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+fetchBinanceTicker();fetchFG();fetchNews();calcIndicators('BTC');
+setInterval(fetchBinanceTicker,30000);setInterval(fetchFG,300000);setInterval(fetchNews,600000);
+updateStats();
+updateKeyBtn();
+
+// ── STARTUP DIAGNOSTIC ──
+function runDiagnostic(){
+  const isFile = location.protocol === 'file:';
+  const hasKey  = !!getKey();
+
+  // If running from file:// show setup guide
+  if(isFile){
+    const out = document.getElementById('output');
+    out.innerHTML = `
+    <div style="background:var(--s1);border:1px solid rgba(255,179,0,.3);border-left:4px solid var(--yel);border-radius:4px;padding:20px;animation:fadeUp .4s ease">
+      <div style="font-family:var(--head);font-size:14px;letter-spacing:2px;color:var(--yel);margin-bottom:12px">⚠ CONFIGURACIÓN REQUERIDA</div>
+      <div style="font-size:11px;color:var(--tx);line-height:1.9;margin-bottom:16px">
+        La app está abierta como archivo local (<code style="color:var(--a)">file://</code>).<br>
+        El navegador bloquea las llamadas a la IA desde archivos locales (CORS).<br>
+        Necesitas abrirla desde un servidor local. Es muy fácil:
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--bd);border-radius:3px;padding:14px;margin-bottom:10px">
+        <div style="font-family:var(--head);font-size:10px;color:var(--a);letter-spacing:2px;margin-bottom:8px">🐍 OPCIÓN 1 — PYTHON (recomendado, 30 segundos)</div>
+        <div style="font-size:10px;color:var(--txd);line-height:2">
+          1. Abre <strong style="color:var(--tx)">Terminal</strong> (Mac/Linux) o <strong style="color:var(--tx)">CMD</strong> (Windows)<br>
+          2. Escribe <code style="color:var(--a2);background:rgba(0,255,157,.08);padding:1px 6px;border-radius:2px">cd </code> y arrastra la carpeta donde está el archivo HTML<br>
+          3. Escribe <code style="color:var(--a2);background:rgba(0,255,157,.08);padding:1px 6px;border-radius:2px">python3 -m http.server 8080</code> y presiona Enter<br>
+          4. Abre Chrome en <code style="color:var(--a);background:rgba(0,229,255,.08);padding:1px 6px;border-radius:2px">http://localhost:8080/crypto-signals.html</code>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--bd);border-radius:3px;padding:14px;margin-bottom:10px">
+        <div style="font-family:var(--head);font-size:10px;color:var(--a3);letter-spacing:2px;margin-bottom:8px">💻 OPCIÓN 2 — VS CODE LIVE SERVER</div>
+        <div style="font-size:10px;color:var(--txd);line-height:2">
+          1. Instala <strong style="color:var(--tx)">VS Code</strong> (gratis en code.visualstudio.com)<br>
+          2. Instala extensión <strong style="color:var(--tx)">"Live Server"</strong> de Ritwick Dey<br>
+          3. Abre la carpeta con el HTML en VS Code<br>
+          4. Click derecho en el archivo → <strong style="color:var(--tx)">"Open with Live Server"</strong>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--bd);border-radius:3px;padding:14px">
+        <div style="font-family:var(--head);font-size:10px;color:var(--a2);letter-spacing:2px;margin-bottom:8px">🌐 OPCIÓN 3 — NPXSERVE (si tienes Node.js)</div>
+        <div style="font-size:10px;color:var(--txd);line-height:2">
+          En la carpeta del archivo, ejecuta:<br>
+          <code style="color:var(--a2);background:rgba(0,255,157,.08);padding:1px 6px;border-radius:2px">npx serve .</code><br>
+          Luego abre la URL que aparece en el terminal.
+        </div>
+      </div>
+
+      <div style="margin-top:14px;font-size:10px;color:var(--txd);border-top:1px solid var(--bd);padding-top:10px">
+        ${hasKey
+          ? '✅ API Key guardada — una vez abras desde servidor local, funcionará inmediatamente.'
+          : '⚠ También necesitas guardar tu API Key. Haz click en <strong style="color:var(--a)">🔑 API KEY</strong> arriba.'}
+      </div>
+    </div>`;
+    return;
+  }
+
+  // Running from server - check key
+  if(!hasKey){
+    setTimeout(()=>{
+      document.getElementById('key-modal').style.display='flex';
+      const st=document.getElementById('key-status');
+      if(st){st.textContent='Necesitas una API Key de Anthropic para usar las señales.';st.style.color='var(--yel)';}
+    },1500);
+  }
+}
+
+runDiagnostic();
+</script>
+</body>
+</html>
