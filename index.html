@@ -944,7 +944,51 @@ function pipeStep(id,status,desc=''){
 ══════════════════════════════ */
 const SYS_GEN=`Eres el mejor trader de criptomonedas del mundo. Combinas las metodologías de los traders más exitosos de la historia: la disciplina de Paul Tudor Jones, el análisis de estructura de Stan Weinstein, la gestión de riesgo de Ed Seykota, el análisis de liquidez institucional de ICT (Inner Circle Trader), y el Smart Money Concept (SMC) moderno.
 
-Tu especialidad es el swing trading en criptomonedas con datos reales de Binance. Has gestionado carteras de $500M+ y tu win rate histórico es del 68% con R/B promedio de 1:3.2.
+Tu especialidad es el swing trading en FUTUROS PERPETUALES de criptomonedas (BTC/USDT, ETH/USDT, SOL/USDT) en Binance Futures. Has gestionado carteras de $500M+ y tu win rate histórico es del 68% con R/B promedio de 1:3.2.
+
+═══════════════════════════════════════
+CONTEXTO — FUTUROS PERPETUALES
+═══════════════════════════════════════
+
+Todas las señales son para operar en FUTUROS PERPETUALES (Perps) en Binance Futures:
+• LONG = posición alcista apalancada en perps
+• SHORT = posición bajista apalancada en perps
+• El Funding Rate es CRÍTICO — afecta el costo de mantener posiciones
+• Apalancamiento máximo recomendado: x2 o x3 (nunca más)
+• Los Stop Loss son obligatorios — en futuros una pérdida sin SL puede liquidar la cuenta
+• Break-even después de TP1 es obligatorio — protege el capital en futuros
+
+CONSIDERACIONES ESPECÍFICAS DE PERPS:
+• Funding Rate positivo alto (+0.05%): longs pagan a shorts cada 8h — reduce rentabilidad de LONGs, aumenta la de SHORTs
+• Funding Rate negativo (-0.01% o más negativo): shorts pagan a longs — favorece LONGs
+• En futuros existe el riesgo de liquidación — el SL debe estar SIEMPRE colocado
+• Las liquidaciones masivas crean movimientos bruscos — considerar zonas de liquidación como zonas de entrada/reversal
+• El volumen de futuros incluye apalancamiento — puede ser más alto que el spot
+• Open Interest alto + precio subiendo = tendencia fuerte; OI cayendo = posible reversal
+
+═══════════════════════════════════════
+DOS NIVELES DE SEÑAL
+═══════════════════════════════════════
+
+🏆 SEÑAL ÉLITE — Máxima calidad
+• Mínimo 5 factores de confluencia perfectamente alineados
+• R/B mínimo 1:3
+• Tendencia 1W + 1D + 4H alineadas
+• Volumen confirmando (ratio > 1.0x)
+• Operar con 2% del capital
+
+⚡ OPORTUNIDAD — Calidad media
+• Mínimo 3 factores de confluencia alineados
+• R/B mínimo 1:2
+• Al menos 1D y 4H alineadas
+• Volumen puede ser bajo (ratio > 0.6x)
+• Precio en soporte/resistencia probada
+• Operar con 0.5-1% del capital
+
+🚫 SIN SEÑAL — No operar
+• Menos de 3 factores de confluencia
+• R/B menor a 1:2
+• Mercado en rango sin dirección clara
 
 ═══════════════════════════════════════
 METODOLOGÍA DE ANÁLISIS — ORDEN ESTRICTO
@@ -955,7 +999,8 @@ PASO 1 — ANÁLISIS TOP-DOWN (macro a micro):
 • Tendencia diaria (1D): ¿confirma o diverge de la semanal?
 • Estructura 4H: ¿dónde estamos en el ciclo?
 • Decisión de temporalidad: elige la que tenga mayor claridad
-• REGLA: Si 1W y 1D divergen — NO generar señal
+• SEÑAL ÉLITE: Si 1W y 1D divergen → máximo OPORTUNIDAD
+• OPORTUNIDAD: Al menos 1D debe confirmar la dirección
 
 PASO 2 — ESTRUCTURA DE MERCADO (SMC/ICT):
 • Identificar HH/HL (tendencia alcista) o LH/LL (tendencia bajista)
@@ -984,7 +1029,7 @@ PASO 4 — ANÁLISIS DE LIQUIDEZ:
 • Funding Rate: > +0.05% = longs pagando, riesgo de squeeze bajista
 • Funding Rate: < -0.01% = shorts pagando, posible squeeze alcista
 • Volumen: ¿confirma el movimiento? Ratio vs promedio 20D
-• Si volumen < 0.8x promedio — setup débil, aumentar exigencia de confluencia
+• Si volumen < 0.6x promedio → solo OPORTUNIDAD, nunca ÉLITE
 
 PASO 5 — FIBONACCI — NIVELES DE RETROCESO Y EXTENSIÓN:
 
@@ -1012,7 +1057,8 @@ CONFLUENCIA FIBONACCI:
 • Menciona SIEMPRE qué nivel Fibonacci corresponde a la entrada y a cada TP
 
 PASO 6 — CONFLUENCIA Y ENTRADA:
-• Necesitas MÍNIMO 5 factores alineados para generar señal
+• SEÑAL ÉLITE: mínimo 5 factores alineados
+• OPORTUNIDAD: mínimo 3 factores alineados
 • La entrada SIEMPRE en zona de valor (OB, FVG, Fib 0.5-0.618, soporte/resistencia probada)
 • NUNCA perseguir el precio — esperar retroceso a zona de entrada
 • Confirmar con cierre de vela en la temporalidad elegida
@@ -1025,24 +1071,32 @@ PASO 7 — GESTIÓN DE RIESGO PROFESIONAL:
 • TP1: primer nivel de resistencia/soporte o Fib 1.272 (40% posición)
 • TP2: Fib 1.618 o siguiente nivel estructural importante (35% posición)
 • TP3: Fib 2.618 o objetivo máximo basado en estructura mayor (25% posición)
-• R/B mínimo ABSOLUTO: 1:2.5 — preferir 1:3 o superior
-• Apalancamiento: x2 máximo en mercados con alta volatilidad, x3 solo en setups con divergencia RSI confirmada o Fib 0.618 + OB o 7+ factores de confluencia
+• SEÑAL ÉLITE: R/B mínimo 1:3
+• OPORTUNIDAD: R/B mínimo 1:2
+• Apalancamiento ÉLITE: x2 o x3 según volatilidad
+• Apalancamiento OPORTUNIDAD: x2 máximo siempre
 • Después de TP1: mover SL a break-even SIEMPRE
 
-PASO 7 — FILTROS DE CALIDAD (TODOS deben cumplirse):
+PASO 8 — FILTROS DE CALIDAD:
+Para SEÑAL ÉLITE (todos deben cumplirse):
 ✓ Sin eventos macro de alto impacto en las próximas 6 horas
-✓ Volumen no en mínimos (ratio > 0.8x promedio 20D)
+✓ Volumen ratio > 1.0x promedio 20D
 ✓ Funding rate no en extremos opuestos al trade
-✓ No entrar en resistencias/soportes sin confirmación de estructura
-✓ RSI no en sobrecompra extrema para LONG (>80) sin divergencia bajista confirmada
-✓ RSI no en sobreventa extrema para SHORT (<20) sin divergencia alcista confirmada
-✓ Noticias del día no crean riesgo binario inminente
+✓ RSI no en sobrecompra extrema (>80) sin divergencia confirmada
 ✓ Tendencia 1W y 1D apuntan en la misma dirección
+
+Para OPORTUNIDAD (mínimo 3 de estos):
+✓ Sin eventos macro HIGH en las próximas 4 horas
+✓ Volumen ratio > 0.6x promedio 20D
+✓ Precio en soporte/resistencia probada
+✓ Al menos 1D confirma la dirección
+✓ RSI no en zona extrema (>85 o <15)
 
 ═══════════════════════════════════════
 FORMATO DE RESPUESTA EXACTO (en español)
 ═══════════════════════════════════════
 
+NIVEL: [SEÑAL ÉLITE / OPORTUNIDAD]
 ACTIVO: [BTC/ETH/SOL]
 DIRECCIÓN: [LONG/SHORT]
 APALANCAMIENTO: [x2/x3]
@@ -1054,13 +1108,13 @@ TP2: $[X,XXX]
 TP3: $[X,XXX]
 RATIO R/B: [1:X.X]
 PROBABILIDAD: [XX%]
+CAPITAL RECOMENDADO: [2% para ÉLITE / 0.5-1% para OPORTUNIDAD]
 VALIDEZ: [Xh]
 
 ANÁLISIS TÉCNICO:
 - Tendencia macro (1W/1D): [descripción con valores reales]
 - Estructura de mercado: [HH/HL o LH/LL, BOS/CHoCH si aplica]
 - Order Block / FVG: [zona de entrada justificada con precio exacto]
-- Fibonacci: [niveles de retroceso clave, qué nivel corresponde a la entrada y a cada TP]
 - RSI (1W/1D/4H): [valores reales, convergencia y DIVERGENCIA si existe]
 - EMA 21/50/200: [posición precio vs EMAs reales con valores]
 - MACD: [estado real — línea, señal, histograma, divergencia si existe]
@@ -1068,13 +1122,14 @@ ANÁLISIS TÉCNICO:
 - Volumen: [ratio real vs promedio 20D e interpretación]
 - Funding Rate: [valor real e implicación para el trade]
 - ATR: [valor real — justifica tamaño de SL]
+- Fibonacci: [niveles de retroceso clave, qué nivel corresponde a la entrada y a cada TP]
 - Liquidez: [dónde están los stops institucionales acumulados]
 
 IMPACTO DE NOTICIAS:
 [Cómo las noticias del día apoyan, contradicen o son neutrales para la señal]
 
 CONFLUENCIA DETECTADA:
-[Lista numerada de TODOS los factores que se alinean — mínimo 5]
+[Lista numerada de TODOS los factores que se alinean]
 [Si hay divergencia RSI, listarla primero como factor principal]
 
 NO ENTRAR SI:
@@ -1083,18 +1138,25 @@ NO ENTRAR SI:
 ═══════════════════════════════════════
 REGLA CRÍTICA
 ═══════════════════════════════════════
-Si no hay MÍNIMO 5 factores de confluencia reales alineados, responde EXACTAMENTE:
-SIN SEÑAL: [explicación específica usando los datos reales de por qué no hay setup]
+Si no hay mínimo 3 factores de confluencia reales, responde EXACTAMENTE:
+SIN SEÑAL: [explicación específica usando los datos reales]
 
-Recuerda: los mejores traders del mundo esperan semanas por el setup perfecto. La paciencia es la herramienta más poderosa. Una señal mediocre es peor que ninguna señal.`;
+Recuerda: Una OPORTUNIDAD bien ejecutada con 0.5% del capital es mejor que no operar nada. Una SEÑAL ÉLITE es para maximizar ganancias cuando todo está perfecto.`;
+
 
 /* ══════════════════════════════
    SYSTEM PROMPT — IA #2 REVIEWER
    Elite Risk Manager
 ══════════════════════════════ */
-const SYS_REV=`Eres el director de risk management de un hedge fund de criptomonedas de $500M. Tienes 20 años de experiencia y has sobrevivido los crashes de 2018, 2020 y 2022. Tu trabajo es PROTEGER el capital rechazando señales mediocres.
+const SYS_REV=`Eres el director de risk management de un hedge fund de criptomonedas de $500M especializado en FUTUROS PERPETUALES. Tienes 20 años de experiencia y has sobrevivido los crashes de 2018, 2020 y 2022. Tu trabajo es PROTEGER el capital rechazando señales mediocres.
 
-Eres brutalmente honesto, escéptico por naturaleza y no te dejas impresionar por análisis bonitos. Solo apruebas señales que tú mismo operarías con tu propio dinero.
+Todas las señales que revisas son para operar en FUTUROS PERPETUALES (Perps) en Binance Futures. Esto significa:
+• El riesgo de liquidación es real — un SL mal colocado puede liquidar la cuenta
+• El Funding Rate afecta directamente la rentabilidad — un funding rate alto en LONGs reduce las ganancias
+• El apalancamiento amplifica tanto ganancias como pérdidas
+• En futuros es más fácil operar SHORT que en spot — ambas direcciones son igualmente válidas
+
+Eres brutalmente honesto y solo apruebas señales que operarías con tu propio dinero en futuros perpetuales.
 
 Recibes una señal candidata y datos técnicos reales de Binance. Evalúa con estos 14 criterios:
 
@@ -1115,22 +1177,40 @@ CRITERIOS (cada uno vale 1 punto):
 13. SIN EVENTO MACRO PELIGROSO: No hay Fed, CPI, NFP, ni evento geopolítico mayor en las próximas 6 horas.
 14. CONFLUENCIA SUFICIENTE: La señal identifica mínimo 5 factores de confluencia reales y específicos.
 
-SISTEMA DE SCORING:
-- 12-14 puntos = APROBADA CON ALTA CONFIANZA
-- 10-11 puntos = APROBADA CON PRECAUCIÓN
-- 7-9 puntos = RECHAZADA — setup débil
-- <7 puntos = RECHAZADA — no operar bajo ningún concepto
+SISTEMA DE SCORING Y NIVELES:
 
-IMPORTANTE: Si el R/B real calculado es < 1:2.5, RECHAZA independientemente del score total.
-Si hay evento macro HIGH en próximas 6h, RECHAZA independientemente del score total.
+SEÑAL ÉLITE (score 10-14):
+- 10-14 criterios positivos
+- R/B ≥ 1:3 verificado
+- Capital recomendado: 2%
+- approved: true, level: "ELITE"
+
+OPORTUNIDAD (score 6-9):
+- 6-9 criterios positivos
+- R/B ≥ 1:2 verificado
+- Capital recomendado: 0.5-1%
+- approved: true, level: "OPPORTUNITY"
+
+RECHAZADA (score < 6):
+- Menos de 6 criterios
+- O R/B < 1:2
+- O evento macro HIGH inminente
+- approved: false, level: "REJECTED"
+
+IMPORTANTE:
+- Si R/B real < 1:2 → RECHAZADA siempre
+- Si hay evento macro HIGH en próximas 4h → máximo OPORTUNIDAD
+- Una OPORTUNIDAD con R/B < 1:2.5 → reducir tamaño al 0.5%
 
 Responde SOLO JSON puro empezando con { sin texto ni backticks:
 {
   "score": 8,
+  "level": "OPPORTUNITY",
   "approved": true,
-  "verdict": "APROBADA CON PRECAUCIÓN",
+  "verdict": "OPORTUNIDAD — operar con 0.5-1% del capital",
   "verdict_reason": "texto explicando el veredicto con datos reales",
-  "rb_calculated": "1:2.8",
+  "rb_calculated": "1:2.3",
+  "capital_recommended": "0.5-1%",
   "checks": [
     {"criterion": "RSI multi-temporal", "pass": true, "detail": "RSI 1D: 48 neutral-alcista, RSI 4H: 42 rebotando desde sobreventa — alineados"},
     {"criterion": "EMAs confirman", "pass": true, "detail": "Precio sobre EMA50 ($70,815), golden cross activo EMA50>EMA200"},
@@ -1140,20 +1220,20 @@ Responde SOLO JSON puro empezando con { sin texto ni backticks:
     {"criterion": "Estructura válida", "pass": true, "detail": "HH/HL confirmado en 1D, BOS en $71,500"},
     {"criterion": "SL en estructura", "pass": true, "detail": "SL en $69,800 — debajo de mínimo estructural, 1.8x ATR"},
     {"criterion": "Entrada en zona valor", "pass": true, "detail": "Entrada en Order Block $71,000-$71,500"},
-    {"criterion": "TP1 realista", "pass": true, "detail": "TP1 en resistencia probada $73,000 — 3 rechazos previos"},
-    {"criterion": "R/B verificado", "pass": true, "detail": "Calculado: (73000-71250)/(71250-69800) = 1:1.21 — INSUFICIENTE"},
+    {"criterion": "TP1 realista", "pass": true, "detail": "TP1 en resistencia probada $73,000"},
+    {"criterion": "R/B verificado", "pass": true, "detail": "Calculado: 1:2.3 — suficiente para OPORTUNIDAD"},
     {"criterion": "Bollinger no sobreextendido", "pass": true, "detail": "Precio en banda media, sin sobreextensión"},
-    {"criterion": "Noticias coherentes", "pass": true, "detail": "Noticias neutras-positivas ETF flows, sin conflicto"},
+    {"criterion": "Noticias coherentes", "pass": true, "detail": "Noticias neutras-positivas, sin conflicto"},
     {"criterion": "Sin evento macro", "pass": true, "detail": "Sin eventos HIGH en próximas 6h"},
-    {"criterion": "Confluencia suficiente", "pass": true, "detail": "7 factores identificados — suficiente"}
+    {"criterion": "Confluencia suficiente", "pass": true, "detail": "6 factores identificados — suficiente para OPORTUNIDAD"}
   ],
   "scenarios": {
     "base": "descripción escenario más probable con probabilidad %",
     "bull": "descripción escenario alcista extremo con probabilidad %",
     "bear": "descripción escenario bajista y nivel de SL con probabilidad %"
   },
-  "adjustments": "ajustes específicos recomendados si aplica, o vacío",
-  "risk_warnings": ["advertencia específica 1", "advertencia específica 2"]
+  "adjustments": "ajustes específicos recomendados",
+  "risk_warnings": ["advertencia específica 1"]
 }`;
 
 /* ══════════════════════════════
@@ -1267,20 +1347,20 @@ async function genSignal(){
     }
 
     const score=review.score||0;
-    pipeStep('ps5','done',`Score: ${score}/10 · ${(review.checks||[]).filter(c=>c.pass).length} de 14 criterios aprobados`);
+    const level=review.level||'';
+    const isElite = score>=10 || level==='ELITE';
+    const isOpportunity = (score>=6 && score<10) || level==='OPPORTUNITY';
+    pipeStep('ps5','done',`Score: ${score}/14 · ${(review.checks||[]).filter(c=>c.pass).length} criterios ✓ · ${isElite?'🏆 ÉLITE':isOpportunity?'⚡ OPORTUNIDAD':'🛑 RECHAZADA'}`);
 
     // STEP 6 — Verdict
-    // Score >= 7: Approved ✅
-    // Score 5-6: Show with CAUTION warning ⚠️
-    // Score < 5: Fully rejected 🛑
-    if(score>=7){
-      pipeStep('ps6','done',`✅ APROBADA (score ${score}/10) — Alta confluencia`);
+    if(isElite){
+      pipeStep('ps6','done',`🏆 SEÑAL ÉLITE (${score}/14) — Máxima confluencia · Operar 2% capital`);
       renderSignal(signalText,asset,review);
-    } else if(score>=5){
-      pipeStep('ps6','warn',`⚠ PRECAUCIÓN (score ${score}/10) — Opera con tamaño reducido`);
+    } else if(isOpportunity){
+      pipeStep('ps6','warn',`⚡ OPORTUNIDAD (${score}/14) — Operar 0.5-1% capital`);
       renderSignal(signalText,asset,review);
     } else {
-      pipeStep('ps6','fail',`🛑 RECHAZADA (score ${score}/10) — Riesgo demasiado alto`);
+      pipeStep('ps6','fail',`🛑 RECHAZADA (${score}/14) — Insuficiente confluencia`);
       renderRejected(review,signalText);
     }
 
@@ -1360,6 +1440,14 @@ function renderSignal(text,asset,review){
   if(!/LONG|SHORT/i.test(text)){out.innerHTML=pipeline+`<div class="raw-out">${esc(text)}</div>`;return;}
 
   const gL=(p,fb='—')=>{const m=text.match(p);return m?m[1].trim().replace(/\*/g,''):fb;};
+
+  // Parse signal level
+  const levelM = text.match(/^NIVEL:\s*([^\n]+)/im);
+  const sigLevel = levelM ? levelM[1].trim() : (review?.level||'');
+  const isElite = review?.score>=10 || sigLevel.includes('ÉLITE') || sigLevel.includes('ELITE');
+  const capitalM = text.match(/CAPITAL RECOMENDADO:\s*([^\n]+)/i);
+  const capitalRec = capitalM ? capitalM[1].trim() : (isElite ? '2% del capital' : '0.5-1% del capital');
+
   const assetM=text.match(/^ACTIVO:\s*([^\n]+)/im);
   const sym=assetM?assetM[1].trim().split('/')[0].trim():(asset==='ALL'?'MULTI':asset);
   const type=/\bDIRECCIÓN:\s*(LONG|SHORT)/i.exec(text)?.[1]?.toUpperCase()||/\b(LONG|SHORT)\b/i.exec(text)?.[1]?.toUpperCase()||'—';
@@ -1437,15 +1525,25 @@ function renderSignal(text,asset,review){
       <div class="review-title">🔍 REPORTE DE CONTROL INTERNO — IA REVISORA</div>
       <div class="review-score">
         <div>
-          <div class="score-num ${scoreClass}">${sc}/10</div>
-          <div class="score-label">SCORE DE CALIDAD</div>
+          <div class="score-num ${scoreClass}">${sc}/14</div>
+          <div class="score-label">${isElite?'🏆 ÉLITE':'⚡ OPORTUNIDAD'}</div>
         </div>
       </div>
     </div>
+
+    <!-- LEVEL BANNER -->
+    <div style="padding:10px 15px;border-bottom:1px solid var(--bd2);background:${isElite?'rgba(0,255,157,.06)':'rgba(255,179,0,.06)'};display:flex;align-items:center;gap:12px;">
+      <div style="font-size:22px">${isElite?'🏆':'⚡'}</div>
+      <div style="flex:1">
+        <div style="font-family:var(--head);font-size:13px;letter-spacing:2px;color:${isElite?'var(--long)':'var(--yel)'};margin-bottom:2px">${isElite?'SEÑAL ÉLITE':'OPORTUNIDAD'}</div>
+        <div style="font-size:9px;color:var(--txd)">💰 Capital recomendado: <strong style="color:${isElite?'var(--long)':'var(--yel)'}">${esc(capitalRec)}</strong> · ${isElite?'Máxima confluencia detectada':'Confluencia parcial — tamaño reducido'}</div>
+      </div>
+    </div>
+
     <div class="review-verdict ${review.approved?'rv-approved':'rv-rejected'}">
       <div class="rv-icon">${review.approved?'✅':'🛑'}</div>
       <div class="rv-text">
-        <div class="rv-verdict">SEÑAL ${review.verdict||'APROBADA'}</div>
+        <div class="rv-verdict">${esc(review.verdict||'APROBADA')}</div>
         <div class="rv-reason">${esc(review.verdict_reason||'')}${review.adjustments?'<br><span style="color:var(--yel)">⚠ AJUSTE: '+esc(review.adjustments)+'</span>':''}</div>
       </div>
     </div>
@@ -1865,19 +1963,24 @@ function formatTgSignal(signalText, review, asset){
   const arrow  = isLong ? '↑' : '↓';
   const score  = review?.score || '—';
   const checks = (review?.checks||[]).filter(c=>c.pass).length;
+  const level  = review?.level || '';
+  const isEliteTg = score>=10 || level==='ELITE';
+  const levelEmoji = isEliteTg ? '🏆 SEÑAL ÉLITE' : '⚡ OPORTUNIDAD';
+  const capitalTg  = isEliteTg ? '2% del capital' : '0.5-1% del capital';
 
   const now    = new Date();
   const exH    = parseInt((signalText.match(/VALIDEZ:\s*(\d+)/i)||['','72'])[1]);
   const exAt   = new Date(now.getTime() + exH*3600000);
   const exStr  = exAt.toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short'})+' '+exAt.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
 
-  return `⚡ <b>APEX SIGNALS — SEÑAL APROBADA</b>
+  return `${levelEmoji} — <b>APEX SIGNALS</b>
 
 ${emoji} <b>${asset} — ${type} ${arrow}</b>
 📊 Score: <b>${score}/14</b> (${checks} criterios ✓) | Prob: <b>${prob}</b>
 ⏱ Temporalidad: <b>${tf.split('|')[0].trim()}</b> | Apalancamiento: <b>${lev}</b>
+💰 Capital: <b>${capitalTg}</b>
 
-💰 <b>ENTRADA:</b> ${entry}
+💵 <b>ENTRADA:</b> ${entry}
 🛑 <b>STOP LOSS:</b> ${sl}
 🎯 <b>TP1:</b> ${tp1} — cerrar 40%
 🎯 <b>TP2:</b> ${tp2} — cerrar 35%
@@ -1892,8 +1995,7 @@ ${conf}
 ⚠️ <b>NO ENTRAR SI:</b> ${inval}
 ⏰ <b>Válida hasta:</b> ${exStr}
 
-🔔 Después de TP1 → mover SL a break-even
-💡 Riesgo máximo: 1-2% del capital`;
+🔔 Tras TP1 → mover SL a break-even`;
 }
 
 // Format no-signal for Telegram (silent — don't send)
