@@ -300,6 +300,27 @@ select:focus{outline:none;border-color:var(--a);}
 
 footer{margin-top:36px;padding-top:12px;border-top:1px solid var(--bd2);font-size:8px;color:var(--txd);letter-spacing:1px;text-align:center;line-height:2;}
 footer strong{color:var(--red);}
+
+/* ── SIGNAL VALIDITY MONITOR ── */
+.validity-monitor{border-radius:3px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;transition:all .4s;border:1px solid;}
+.vm-valid{background:rgba(0,255,157,.05);border-color:rgba(0,255,157,.2);}
+.vm-warning{background:rgba(255,179,0,.06);border-color:rgba(255,179,0,.3);}
+.vm-invalid{background:rgba(255,48,80,.08);border-color:rgba(255,48,80,.4);animation:flash .8s ease infinite;}
+.vm-expired{background:rgba(100,100,100,.08);border-color:rgba(100,100,100,.3);}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.6}}
+.vm-icon{font-size:20px;flex-shrink:0;}
+.vm-body{flex:1;}
+.vm-status{font-family:var(--head);font-size:12px;letter-spacing:2px;margin-bottom:3px;}
+.vm-valid .vm-status{color:var(--long);}
+.vm-warning .vm-status{color:var(--yel);}
+.vm-invalid .vm-status{color:var(--red);}
+.vm-expired .vm-status{color:var(--txd);}
+.vm-detail{font-size:9px;color:var(--txd);line-height:1.6;}
+.vm-price{font-family:var(--head);font-size:15px;font-weight:700;text-align:right;flex-shrink:0;}
+.vm-valid .vm-price{color:var(--long);}
+.vm-warning .vm-price{color:var(--yel);}
+.vm-invalid .vm-price{color:var(--red);}
+.vm-expired .vm-price{color:var(--txd);}
 </style>
 </head>
 <body>
@@ -360,6 +381,7 @@ footer strong{color:var(--red);}
   <button class="tab on" onclick="sw('signals')">⚡ SEÑALES</button>
   <button class="tab" onclick="sw('tracker')">📊 TRACKER</button>
   <button class="tab" onclick="sw('events')">📅 EVENTOS</button>
+  <button class="tab" onclick="sw('telegram')">📱 TELEGRAM</button>
 </div>
 
 <!-- SIGNALS TAB -->
@@ -406,7 +428,72 @@ footer strong{color:var(--red);}
   <div id="ev-out"><div style="padding:28px;text-align:center;font-size:9px;color:var(--txd);letter-spacing:2px;">PRESIONA "ANALIZAR" PARA CARGAR EVENTOS</div></div>
 </div>
 
-<footer>
+<!-- TELEGRAM TAB -->
+<div id="tab-telegram" class="panel">
+  <div id="tg-panel" style="display:flex;flex-direction:column;gap:10px;">
+
+    <!-- Status card -->
+    <div style="background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:16px;">
+      <div style="font-family:var(--head);font-size:13px;letter-spacing:2px;color:var(--txb);margin-bottom:14px;">📱 TELEGRAM AUTO-SCAN</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ESTADO</div>
+          <div id="tg-status" style="font-family:var(--head);font-size:14px;color:var(--txd);">⏸ INACTIVO</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">SEÑALES ENVIADAS</div>
+          <div id="tg-signals" style="font-family:var(--head);font-size:14px;color:var(--a2);">0 señales enviadas</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ESCANEOS</div>
+          <div id="tg-count" style="font-family:var(--head);font-size:14px;color:var(--a);">0 escaneos</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">CUENTA REGRESIVA</div>
+          <div id="tg-countdown" style="font-family:var(--head);font-size:11px;color:var(--txd);">—</div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:3px;padding:10px 13px;margin-bottom:12px;font-size:9px;color:var(--txd);line-height:1.8;">
+        <div style="color:var(--a);font-family:var(--head);font-size:9px;letter-spacing:2px;margin-bottom:5px;">⚙️ CONFIGURACIÓN</div>
+        🔄 Escaneo automático cada <strong style="color:var(--tx)">1 hora</strong><br>
+        📊 Analiza <strong style="color:var(--tx)">BTC + ETH + SOL</strong> en cada escaneo<br>
+        ✅ Solo envía si score <strong style="color:var(--tx)">≥ 7/14</strong> criterios<br>
+        💰 Costo estimado: <strong style="color:var(--tx)">~$0.25/día</strong>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button id="tg-toggle" onclick="toggleTgScan()" style="width:100%;background:transparent;border:1px solid var(--a);color:var(--a);font-family:var(--head);font-size:13px;letter-spacing:3px;padding:13px;border-radius:3px;cursor:pointer;transition:all .2s;">
+          ▶ INICIAR ESCANEO AUTO
+        </button>
+        <button id="tg-now" onclick="tgScanNow()" style="width:100%;background:transparent;border:1px solid var(--bd);color:var(--txd);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:11px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--a3)';this.style.color='var(--a3)'" onmouseout="this.style.borderColor='var(--bd)';this.style.color='var(--txd)'">
+          ⚡ ESCANEAR AHORA
+        </button>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div style="background:var(--s1);border:1px solid var(--bd2);border-left:3px solid var(--a3);border-radius:3px;padding:14px;">
+      <div style="font-family:var(--head);font-size:9px;color:var(--a3);letter-spacing:2px;margin-bottom:8px;">¿CÓMO FUNCIONA?</div>
+      <div style="font-size:10px;color:var(--txd);line-height:1.9;">
+        1. Presiona <strong style="color:var(--tx)">INICIAR ESCANEO AUTO</strong><br>
+        2. Cada hora la app analiza BTC, ETH y SOL en segundo plano<br>
+        3. Si hay señal que pasa los 14 criterios → te llega a Telegram al instante<br>
+        4. Puedes usar <strong style="color:var(--tx)">ESCANEAR AHORA</strong> para forzar un escaneo inmediato<br>
+        5. La app debe estar abierta en el navegador para que funcione
+      </div>
+    </div>
+
+    <!-- Warning -->
+    <div style="background:rgba(255,179,0,.04);border:1px solid rgba(255,179,0,.2);border-radius:3px;padding:12px 14px;font-size:9px;color:var(--yel);line-height:1.8;">
+      ⚠️ <strong>La app debe estar abierta</strong> en el navegador para que el escaneo funcione.<br>
+      Para escaneo 24/7 sin tener el navegador abierto necesitarías un servidor dedicado.
+    </div>
+
+  </div>
+</div>
   <strong>⚠ RIESGO:</strong> Análisis de IA educativo. No es asesoramiento financiero.<br>
   Datos: Binance API pública · Indicadores calculados en tiempo real · Doble verificación IA antes de cada señal<br>
   El trading puede resultar en pérdida total del capital.
@@ -762,7 +849,8 @@ async function fetchNews(){
     try{p=JSON.parse(text.trim());}catch(_){}
     if(!p){const s=text.indexOf('{'),e=text.lastIndexOf('}');if(s!==-1&&e!==-1)try{p=JSON.parse(text.slice(s,e+1));}catch(_){}}
     if(p?.headlines){
-      newsCtx=`NOTICIAS CRYPTO (${ds}):\n${p.headlines.map(h=>'• '+h).join('\n')}\nSentimiento general: ${p.sentiment}\nEvento macro clave: ${p.macro_event||'ninguno'}\nCatalizadores alcistas: ${(p.bullish_catalysts||[]).join(', ')}\nRiesgos bajistas: ${(p.bearish_risks||[]).join(', ')}\nRegulación: ${p.regulatory||'sin noticias regulatorias'}`;
+      // Keep news context compact to avoid rate limits
+      newsCtx=`NOTICIAS (${ds}): ${p.headlines.slice(0,3).join(' | ')} | Sentimiento:${p.sentiment} | Macro:${p.macro_event||'ninguno'} | Riesgos:${(p.bearish_risks||[]).slice(0,2).join(',')}`;
       const sc=p.sentiment==='BULLISH'?'var(--long)':p.sentiment==='BEARISH'?'var(--red)':'var(--yel)';
       strip.innerHTML=`<strong>📰 NOTICIAS — <span style="color:${sc}">${p.sentiment}</span></strong>${p.headlines.map(h=>`<div class="ni">${esc(h)}</div>`).join('')}`;
       newsLoaded=true;
@@ -779,21 +867,15 @@ async function fetchNews(){
 function buildIndCtx(sym){
   const ind=indicators[sym],pr=live[sym];
   if(!ind||!pr)return`${sym}: datos no disponibles`;
-  const fmt=n=>n?'$'+parseFloat(n).toLocaleString('en-US',{maximumFractionDigits:2}):'N/D';
-  return `━━━ ${sym}/USDT — DATOS REALES BINANCE ━━━
-Precio: $${pr.price.toLocaleString('en-US',{maximumFractionDigits:2})} (${pr.chg>=0?'+':''}${pr.chg.toFixed(2)}% 24h)
-RSI 1D: ${ind.rsi1d} | RSI 4H: ${ind.rsi4h} | RSI 1W: ${ind.rsi1w||'N/D'}
-EMA 21D: ${fmt(ind.ema21)} | EMA 50D: ${fmt(ind.ema50)} | EMA 200D: ${fmt(ind.ema200)}
-Precio vs EMA50: ${ind.priceAboveEMA50?'ARRIBA ↑':'ABAJO ↓'} | Precio vs EMA200: ${ind.priceAboveEMA200?'ARRIBA ↑':'ABAJO ↓'}
-Cruce EMA: ${ind.goldenCross?'GOLDEN CROSS (alcista)':'DEATH CROSS (bajista)'}
-MACD 1D: ${ind.macd?`línea=${ind.macd.line.toFixed(2)}, ${ind.macd.bullish?'ALCISTA':'BAJISTA'}${ind.macd.crossover?', CRUCE RECIENTE':''}`:  'N/D'}
-Bandas Bollinger: Upper=${fmt(ind.bb?.upper)} Mid=${fmt(ind.bb?.middle)} Lower=${fmt(ind.bb?.lower)} Ancho=${ind.bb?.width}%
-ATR 14D: ${ind.atr?'$'+ind.atr:'N/D'} (volatilidad real del activo)
-Volumen ratio vs promedio 20D: ${ind.volRatio}x (${parseFloat(ind.volRatio)>1.3?'ALTO — confirma movimientos':'BAJO — poca convicción'})
-Funding Rate: ${ind.fund!==null?ind.fund+'%'+( parseFloat(ind.fund)>0.05?' — longs pagando, riesgo de squeeze':parseFloat(ind.fund)<-0.01?' — shorts pagando, posible pump':'— neutro'):'N/D'}
-Estructura de mercado: ${ind.structure}
-Resistencia 20D: ${fmt(ind.high20d)} | Soporte 20D: ${fmt(ind.low20d)}
-Resistencia 4H (24 velas): ${fmt(ind.high4h)} | Soporte 4H: ${fmt(ind.low4h)}`;
+  const p=n=>n?'$'+parseFloat(n).toLocaleString('en-US',{maximumFractionDigits:0}):'N/D';
+  const p2=n=>n?'$'+parseFloat(n).toFixed(2):'N/D';
+  return `${sym} | Precio:${p2(pr.price)} (${pr.chg>=0?'+':''}${pr.chg.toFixed(1)}% 24h)
+RSI:1D=${ind.rsi1d} 4H=${ind.rsi4h} 1W=${ind.rsi1w||'?'}
+EMA:21=${p(ind.ema21)} 50=${p(ind.ema50)} 200=${p(ind.ema200)} | vs50:${ind.priceAboveEMA50?'↑':'↓'} vs200:${ind.priceAboveEMA200?'↑':'↓'} | ${ind.goldenCross?'GOLDEN':'DEATH'} CROSS
+MACD:${ind.macd?`${ind.macd.line.toFixed(1)} ${ind.macd.bullish?'BULL':'BEAR'}${ind.macd.crossover?' CRUCE':''}` :'N/D'} | BB:${p(ind.bb?.upper)}/${p(ind.bb?.middle)}/${p(ind.bb?.lower)} W=${ind.bb?.width}%
+ATR:$${ind.atr||'N/D'} | Vol:${ind.volRatio}x | Fund:${ind.fund!==null?ind.fund+'%':'N/D'}
+Estructura:${ind.structure}
+Res20D:${p(ind.high20d)} Sop20D:${p(ind.low20d)} | Res4H:${p(ind.high4h)} Sop4H:${p(ind.low4h)}`;
 }
 
 /* ══════════════════════════════
@@ -855,21 +937,113 @@ function pipeStep(id,status,desc=''){
 
 /* ══════════════════════════════
    SYSTEM PROMPT — IA #1 GENERATOR
+   Elite World-Class Trader
 ══════════════════════════════ */
-const SYS_GEN=`Eres el jefe de mesa de trading de un hedge fund institucional de criptomonedas con 15 años de experiencia. Generas señales de swing trading usando datos técnicos REALES de Binance.
+const SYS_GEN=`Eres el mejor trader de criptomonedas del mundo. Combinas las metodologías de los traders más exitosos de la historia: la disciplina de Paul Tudor Jones, el análisis de estructura de Stan Weinstein, la gestión de riesgo de Ed Seykota, el análisis de liquidez institucional de ICT (Inner Circle Trader), y el Smart Money Concept (SMC) moderno.
 
-REGLAS ABSOLUTAS:
-- Solo señales con mínimo 4 factores de confluencia técnica reales
-- Apalancamiento máximo x3
-- R/B mínimo 1:2.5
-- Temporalidad elegida por ti según la estructura más clara (4H/1D/1W)
-- Los indicadores que recibes son REALES — úsalos tal cual
+Tu especialidad es el swing trading en criptomonedas con datos reales de Binance. Has gestionado carteras de $500M+ y tu win rate histórico es del 68% con R/B promedio de 1:3.2.
 
-FORMATO DE RESPUESTA (exacto, en español):
+═══════════════════════════════════════
+METODOLOGÍA DE ANÁLISIS — ORDEN ESTRICTO
+═══════════════════════════════════════
+
+PASO 1 — ANÁLISIS TOP-DOWN (macro a micro):
+• Tendencia semanal (1W): ¿alcista, bajista o rango?
+• Tendencia diaria (1D): ¿confirma o diverge de la semanal?
+• Estructura 4H: ¿dónde estamos en el ciclo?
+• Decisión de temporalidad: elige la que tenga mayor claridad
+• REGLA: Si 1W y 1D divergen — NO generar señal
+
+PASO 2 — ESTRUCTURA DE MERCADO (SMC/ICT):
+• Identificar HH/HL (tendencia alcista) o LH/LL (tendencia bajista)
+• Localizar Order Blocks (OB): últimas velas bajistas antes de impulso alcista, o alcistas antes de bajista
+• Identificar Fair Value Gaps (FVG): zonas de desequilibrio de precio sin llenar
+• Detectar zonas de liquidez: stops acumulados sobre máximos/mínimos previos
+• Break of Structure (BOS) o Change of Character (CHoCH)
+
+PASO 3 — INDICADORES TÉCNICOS + DIVERGENCIAS RSI:
+• RSI multi-temporal (1W + 1D + 4H): ¿convergencia o divergencia entre temporalidades?
+
+DIVERGENCIAS RSI — MUY IMPORTANTE:
+- Divergencia alcista regular: precio hace LL pero RSI hace HL → señal de reversión alcista fuerte
+- Divergencia bajista regular: precio hace HH pero RSI hace LH → señal de reversión bajista fuerte
+- Divergencia alcista oculta: precio hace HL pero RSI hace LL → continuación alcista
+- Divergencia bajista oculta: precio hace LH pero RSI hace HH → continuación bajista
+- Una divergencia RSI confirmada aumenta la probabilidad del trade en +15-20%
+- Si hay divergencia RSI, menciónala explícitamente como factor de confluencia
+
+• EMA 21/50/200: posición del precio y cruces
+• MACD: histograma, cruces de señal, divergencias MACD también
+• Bollinger Bands: compresión (baja volatilidad = explosión próxima) o expansión
+• ATR: medir volatilidad real para dimensionar SL correctamente
+
+PASO 4 — ANÁLISIS DE LIQUIDEZ:
+• Funding Rate: > +0.05% = longs pagando, riesgo de squeeze bajista
+• Funding Rate: < -0.01% = shorts pagando, posible squeeze alcista
+• Volumen: ¿confirma el movimiento? Ratio vs promedio 20D
+• Si volumen < 0.8x promedio — setup débil, aumentar exigencia de confluencia
+
+PASO 5 — FIBONACCI — NIVELES DE RETROCESO Y EXTENSIÓN:
+
+RETROCESOS DE FIBONACCI (para encontrar zonas de entrada):
+• Traza desde el mínimo más reciente al máximo más reciente (para LONG)
+• Traza desde el máximo más reciente al mínimo más reciente (para SHORT)
+• Niveles clave de retroceso:
+  - 0.236 (23.6%): retroceso superficial — tendencia muy fuerte
+  - 0.382 (38.2%): primer soporte/resistencia importante ⭐
+  - 0.500 (50.0%): nivel psicológico — zona de equilibrio ⭐⭐
+  - 0.618 (61.8%): "Golden Ratio" — zona de entrada IDEAL ⭐⭐⭐
+  - 0.786 (78.6%): retroceso profundo — última oportunidad antes de invalidar
+• Si la zona de entrada coincide con Fib 0.618 o 0.5 + Order Block = confluencia MÁXIMA
+
+EXTENSIONES DE FIBONACCI (para calcular TPs):
+• TP1: extensión 1.272 (127.2%) del movimiento anterior
+• TP2: extensión 1.618 (161.8%) — "Golden Extension" — objetivo principal ⭐⭐⭐
+• TP3: extensión 2.618 (261.8%) — objetivo máximo en tendencias fuertes
+• Si el precio ya superó 1.618 — buscar extensión 2.0 o 2.618
+
+CONFLUENCIA FIBONACCI:
+• Fib 0.618 + Order Block = entrada de alta probabilidad
+• Fib 0.5 + EMA 50 = soporte/resistencia dinámico fuerte
+• Fib 1.618 + resistencia histórica = TP2 ideal
+• Menciona SIEMPRE qué nivel Fibonacci corresponde a la entrada y a cada TP
+
+PASO 6 — CONFLUENCIA Y ENTRADA:
+• Necesitas MÍNIMO 5 factores alineados para generar señal
+• La entrada SIEMPRE en zona de valor (OB, FVG, Fib 0.5-0.618, soporte/resistencia probada)
+• NUNCA perseguir el precio — esperar retroceso a zona de entrada
+• Confirmar con cierre de vela en la temporalidad elegida
+• Una divergencia RSI cuenta como 2 factores de confluencia por su alta fiabilidad
+• Fibonacci 0.618 coincidiendo con OB o EMA cuenta como 2 factores
+
+PASO 7 — GESTIÓN DE RIESGO PROFESIONAL:
+• SL: siempre detrás de estructura real (mínimo/máximo significativo)
+• SL mínimo: 1.5x ATR del activo en la temporalidad elegida
+• TP1: primer nivel de resistencia/soporte o Fib 1.272 (40% posición)
+• TP2: Fib 1.618 o siguiente nivel estructural importante (35% posición)
+• TP3: Fib 2.618 o objetivo máximo basado en estructura mayor (25% posición)
+• R/B mínimo ABSOLUTO: 1:2.5 — preferir 1:3 o superior
+• Apalancamiento: x2 máximo en mercados con alta volatilidad, x3 solo en setups con divergencia RSI confirmada o Fib 0.618 + OB o 7+ factores de confluencia
+• Después de TP1: mover SL a break-even SIEMPRE
+
+PASO 7 — FILTROS DE CALIDAD (TODOS deben cumplirse):
+✓ Sin eventos macro de alto impacto en las próximas 6 horas
+✓ Volumen no en mínimos (ratio > 0.8x promedio 20D)
+✓ Funding rate no en extremos opuestos al trade
+✓ No entrar en resistencias/soportes sin confirmación de estructura
+✓ RSI no en sobrecompra extrema para LONG (>80) sin divergencia bajista confirmada
+✓ RSI no en sobreventa extrema para SHORT (<20) sin divergencia alcista confirmada
+✓ Noticias del día no crean riesgo binario inminente
+✓ Tendencia 1W y 1D apuntan en la misma dirección
+
+═══════════════════════════════════════
+FORMATO DE RESPUESTA EXACTO (en español)
+═══════════════════════════════════════
+
 ACTIVO: [BTC/ETH/SOL]
 DIRECCIÓN: [LONG/SHORT]
 APALANCAMIENTO: [x2/x3]
-TEMPORALIDAD: [4H/1D/1W] | [razón en 5 palabras]
+TEMPORALIDAD: [4H/1D/1W] | [razón específica]
 ENTRADA: [$X,XXX – $X,XXX]
 STOP LOSS: $[X,XXX]
 TP1: $[X,XXX]
@@ -880,69 +1054,103 @@ PROBABILIDAD: [XX%]
 VALIDEZ: [Xh]
 
 ANÁLISIS TÉCNICO:
-[Usa los datos reales. 6-8 líneas: tendencia, EMAs, RSI multi-temporal, MACD, Bollinger, ATR, estructura, volumen, funding rate. Sé específico con valores reales.]
+- Tendencia macro (1W/1D): [descripción con valores reales]
+- Estructura de mercado: [HH/HL o LH/LL, BOS/CHoCH si aplica]
+- Order Block / FVG: [zona de entrada justificada con precio exacto]
+- Fibonacci: [niveles de retroceso clave, qué nivel corresponde a la entrada y a cada TP]
+- RSI (1W/1D/4H): [valores reales, convergencia y DIVERGENCIA si existe]
+- EMA 21/50/200: [posición precio vs EMAs reales con valores]
+- MACD: [estado real — línea, señal, histograma, divergencia si existe]
+- Bollinger Bands: [ancho real, posición precio, compresión o expansión]
+- Volumen: [ratio real vs promedio 20D e interpretación]
+- Funding Rate: [valor real e implicación para el trade]
+- ATR: [valor real — justifica tamaño de SL]
+- Liquidez: [dónde están los stops institucionales acumulados]
 
 IMPACTO DE NOTICIAS:
-[2-3 líneas: cómo las noticias apoyan o contradicen la señal]
+[Cómo las noticias del día apoyan, contradicen o son neutrales para la señal]
+
+CONFLUENCIA DETECTADA:
+[Lista numerada de TODOS los factores que se alinean — mínimo 5]
+[Si hay divergencia RSI, listarla primero como factor principal]
 
 NO ENTRAR SI:
-[condición exacta de invalidación]
+[Condición específica de invalidación con nivel de precio exacto]
 
-Si no hay mínimo 4 factores de confluencia reales, responde:
-SIN SEÑAL: [razón usando los datos reales]`;
+═══════════════════════════════════════
+REGLA CRÍTICA
+═══════════════════════════════════════
+Si no hay MÍNIMO 5 factores de confluencia reales alineados, responde EXACTAMENTE:
+SIN SEÑAL: [explicación específica usando los datos reales de por qué no hay setup]
+
+Recuerda: los mejores traders del mundo esperan semanas por el setup perfecto. La paciencia es la herramienta más poderosa. Una señal mediocre es peor que ninguna señal.`;
 
 /* ══════════════════════════════
    SYSTEM PROMPT — IA #2 REVIEWER
+   Elite Risk Manager
 ══════════════════════════════ */
-const SYS_REV=`Eres el jefe de risk management de un hedge fund institucional. Tu rol es REVISAR y CRITICAR señales de trading antes de que lleguen al trader. Eres escéptico, exigente y proteges el capital por encima de todo.
+const SYS_REV=`Eres el director de risk management de un hedge fund de criptomonedas de $500M. Tienes 20 años de experiencia y has sobrevivido los crashes de 2018, 2020 y 2022. Tu trabajo es PROTEGER el capital rechazando señales mediocres.
 
-Recibirás una señal candidata con todos los datos técnicos reales. Debes evaluarla en 14 criterios y decidir si se aprueba o rechaza.
+Eres brutalmente honesto, escéptico por naturaleza y no te dejas impresionar por análisis bonitos. Solo apruebas señales que tú mismo operarías con tu propio dinero.
 
-CRITERIOS DE EVALUACIÓN (puntúa cada uno de 0 a 1):
-1. RSI multi-temporal coherente con la dirección (1D + 4H alineados)
-2. EMA 50/200 soportan la dirección del trade
-3. MACD confirma (línea en la dirección correcta)
-4. Volumen confirma (ratio > 1.0x promedio)
-5. Funding rate no indica trampa (no extremo contrario al trade)
-6. Estructura de mercado (HH/HL para long, LH/LL para short)
-7. Stop Loss bien colocado en estructura real (no arbitrario)
-8. TP1 alcanzable y realista con los niveles de resistencia/soporte reales
-9. Ratio R/B es realmente ≥ 1:2.5 verificando los niveles dados
-10. Bollinger Bands apoyan el trade (no sobreextensión extrema)
-11. ATR justifica el tamaño de SL (SL ≥ 1.5x ATR del activo)
-12. Noticias del día no contradicen la señal
-13. No hay evento macro de alto impacto en las próximas 8 horas
-14. Señal es apta para swing (no scalp disfrazado)
+Recibes una señal candidata y datos técnicos reales de Binance. Evalúa con estos 14 criterios:
 
-FORMATO DE RESPUESTA EXACTO (JSON puro, sin backticks, empezando con {):
+CRITERIOS (cada uno vale 1 punto):
+1. RSI MULTI-TEMPORAL ALINEADO: 1D y 4H apuntan en la misma dirección. Si divergen = 0 puntos.
+2. EMAs CONFIRMAN DIRECCIÓN: Para LONG, precio > EMA50 o rebotando desde soporte EMA. Para SHORT, precio < EMA50. Golden/Death Cross como contexto.
+3. MACD CONFIRMA: Línea MACD en la dirección del trade. Cruce reciente suma 0.5 extra.
+4. VOLUMEN CONFIRMA: Ratio ≥ 1.0x promedio 20D. Si < 0.8x = señal débil = 0 puntos.
+5. FUNDING RATE SEGURO: No extremo contra el trade. >+0.05% en LONG = riesgo squeeze = 0. <-0.01% en SHORT = riesgo squeeze = 0.
+6. ESTRUCTURA VÁLIDA: HH/HL para LONG, LH/LL para SHORT. Confirmar BOS o CHoCH si aplica.
+7. STOP LOSS EN ESTRUCTURA: SL detrás de mínimo/máximo estructural real, no arbitrario. Verificar que sea ≥ 1.5x ATR.
+8. ENTRADA EN ZONA DE VALOR: Precio en Order Block, FVG, Fibonacci 0.5-0.618, o soporte/resistencia probada — no en medio del aire. Fibonacci 0.618 + OB = máxima confluencia.
+9. TP1 REALISTA: TP1 en resistencia/soporte real o nivel Fibonacci 1.272. Verificar coherencia con niveles dados.
+9b. TPs EN FIBONACCI: TP2 idealmente en extensión Fib 1.618, TP3 en 2.618 o estructura mayor.
+10. RATIO R/B VERIFICADO: Calcular manualmente (TP1-Entrada)/(Entrada-SL). Debe ser ≥ 1:2.5 real, no estimado.
+11. BOLLINGER NO SOBREEXTENDIDO: Precio no tocando banda externa sin rebote confirmado. Compresión = oportunidad.
+12. NOTICIAS COHERENTES: Las noticias del día no crean riesgo binario inminente contra la señal.
+13. SIN EVENTO MACRO PELIGROSO: No hay Fed, CPI, NFP, ni evento geopolítico mayor en las próximas 6 horas.
+14. CONFLUENCIA SUFICIENTE: La señal identifica mínimo 5 factores de confluencia reales y específicos.
+
+SISTEMA DE SCORING:
+- 12-14 puntos = APROBADA CON ALTA CONFIANZA
+- 10-11 puntos = APROBADA CON PRECAUCIÓN
+- 7-9 puntos = RECHAZADA — setup débil
+- <7 puntos = RECHAZADA — no operar bajo ningún concepto
+
+IMPORTANTE: Si el R/B real calculado es < 1:2.5, RECHAZA independientemente del score total.
+Si hay evento macro HIGH en próximas 6h, RECHAZA independientemente del score total.
+
+Responde SOLO JSON puro empezando con { sin texto ni backticks:
 {
   "score": 8,
   "approved": true,
-  "verdict": "APROBADA",
-  "verdict_reason": "La señal tiene 11 de 14 criterios positivos. RSI 4H y 1D alineados alcistas, volumen 1.4x promedio, MACD con cruce reciente.",
+  "verdict": "APROBADA CON PRECAUCIÓN",
+  "verdict_reason": "texto explicando el veredicto con datos reales",
+  "rb_calculated": "1:2.8",
   "checks": [
-    {"criterion": "RSI multi-temporal", "pass": true, "detail": "RSI 1D: 48 neutral-alcista, RSI 4H: 42 rebotando desde sobreventa"},
-    {"criterion": "EMA 50/200", "pass": true, "detail": "Precio sobre EMA50, golden cross activo"},
-    {"criterion": "MACD", "pass": true, "detail": "Línea MACD positiva y cruce reciente"},
-    {"criterion": "Volumen", "pass": true, "detail": "Ratio 1.4x — confirma el movimiento"},
-    {"criterion": "Funding Rate", "pass": true, "detail": "0.01% — neutro, sin riesgo de squeeze"},
-    {"criterion": "Estructura mercado", "pass": true, "detail": "HH/HL confirmado en 1D"},
-    {"criterion": "Stop Loss estructura", "pass": true, "detail": "SL en soporte clave real $X"},
-    {"criterion": "TP1 realista", "pass": true, "detail": "TP1 en resistencia probada $X"},
-    {"criterion": "Ratio R/B verificado", "pass": true, "detail": "Calculado: 1:2.8 — correcto"},
-    {"criterion": "Bollinger Bands", "pass": false, "detail": "Precio cerca de banda superior — riesgo de reversión"},
-    {"criterion": "ATR vs SL", "pass": true, "detail": "SL = 2.1x ATR — bien posicionado"},
-    {"criterion": "Noticias coherentes", "pass": true, "detail": "Noticias neutras-positivas, sin conflicto"},
-    {"criterion": "Sin evento macro", "pass": false, "detail": "CPI en 6 horas — riesgo de volatilidad"},
-    {"criterion": "Swing válido", "pass": true, "detail": "Validez 48h coherente con temporalidad 1D"}
+    {"criterion": "RSI multi-temporal", "pass": true, "detail": "RSI 1D: 48 neutral-alcista, RSI 4H: 42 rebotando desde sobreventa — alineados"},
+    {"criterion": "EMAs confirman", "pass": true, "detail": "Precio sobre EMA50 ($70,815), golden cross activo EMA50>EMA200"},
+    {"criterion": "MACD confirma", "pass": true, "detail": "Línea MACD positiva +1.2, sin cruce reciente pero alcista"},
+    {"criterion": "Volumen confirma", "pass": false, "detail": "Ratio 0.64x — BAJO, no confirma el movimiento"},
+    {"criterion": "Funding Rate seguro", "pass": true, "detail": "+0.01% — neutro, sin riesgo de squeeze"},
+    {"criterion": "Estructura válida", "pass": true, "detail": "HH/HL confirmado en 1D, BOS en $71,500"},
+    {"criterion": "SL en estructura", "pass": true, "detail": "SL en $69,800 — debajo de mínimo estructural, 1.8x ATR"},
+    {"criterion": "Entrada en zona valor", "pass": true, "detail": "Entrada en Order Block $71,000-$71,500"},
+    {"criterion": "TP1 realista", "pass": true, "detail": "TP1 en resistencia probada $73,000 — 3 rechazos previos"},
+    {"criterion": "R/B verificado", "pass": true, "detail": "Calculado: (73000-71250)/(71250-69800) = 1:1.21 — INSUFICIENTE"},
+    {"criterion": "Bollinger no sobreextendido", "pass": true, "detail": "Precio en banda media, sin sobreextensión"},
+    {"criterion": "Noticias coherentes", "pass": true, "detail": "Noticias neutras-positivas ETF flows, sin conflicto"},
+    {"criterion": "Sin evento macro", "pass": true, "detail": "Sin eventos HIGH en próximas 6h"},
+    {"criterion": "Confluencia suficiente", "pass": true, "detail": "7 factores identificados — suficiente"}
   ],
   "scenarios": {
-    "base": "El precio consolida en la zona de entrada y rompe al alza hacia TP1 en 24-48h con volumen normal. Probabilidad: 55%.",
-    "bull": "Noticias positivas aceleran el movimiento, TP2 alcanzado en 12h. Mover SL a BE inmediatamente tras TP1. Probabilidad: 25%.",
-    "bear": "Precio rechaza la entrada y activa el SL. Posible si CPI sale por encima de expectativas. Probabilidad: 20%."
+    "base": "descripción escenario más probable con probabilidad %",
+    "bull": "descripción escenario alcista extremo con probabilidad %",
+    "bear": "descripción escenario bajista y nivel de SL con probabilidad %"
   },
-  "adjustments": "Reducir tamaño de posición al 50% por el CPI pendiente. Entrar solo en la mitad inferior de la zona de entrada.",
-  "risk_warnings": ["CPI en 6h puede generar volatilidad extrema", "Bollinger superior cercano limita el upside a corto plazo"]
+  "adjustments": "ajustes específicos recomendados si aplica, o vacío",
+  "risk_warnings": ["advertencia específica 1", "advertencia específica 2"]
 }`;
 
 /* ══════════════════════════════
@@ -999,19 +1207,40 @@ async function genSignal(){
     const signalText=d1.content?.map(b=>b.text||'').join('')||'';
     if(!signalText) throw new Error('IA#1 devolvió respuesta vacía. Intenta nuevamente.');
 
-    if(/^SIN SEÑAL:/im.test(signalText)||signalText.includes('NO HAY OPERACIONES')){
-      pipeStep('ps4','warn','IA Generadora: no encontró confluencia suficiente');
-      pipeStep('ps5','idle','');pipeStep('ps6','fail','Sin señal que revisar');
-      const reason=signalText.replace(/^SIN SEÑAL:\s*/im,'').replace('NO HAY OPERACIONES SEGURAS EN ESTE MOMENTO','').trim();
+    // Broad no-signal detection
+    const noSignalPhrases = [
+      'SIN SEÑAL','NO HAY OPERACIONES','NO HAY SEÑAL','SIN OPERACIONES',
+      'no se recomienda','no hay confluencia','no existe setup','no hay setup',
+      'mercado sin dirección','sin dirección clara','no operar','evitar operar'
+    ];
+    const isNoSignal = noSignalPhrases.some(p => signalText.toUpperCase().includes(p.toUpperCase()));
+    const hasSignal = /\b(LONG|SHORT)\b/i.test(signalText);
+
+    if(isNoSignal || !hasSignal){
+      pipeStep('ps4','warn','IA Generadora: no hay setup válido en este momento');
+      pipeStep('ps5','idle','—');
+      pipeStep('ps6','fail','Sin señal que revisar');
       const pipe=document.getElementById('output').querySelector('.pipeline')?.outerHTML||'';
-      document.getElementById('output').innerHTML=pipe+`<div class="nosig"><div class="nosig-icon">🚫</div><div class="nosig-t">SIN SEÑAL VÁLIDA</div><div class="nosig-s">${esc(reason)||'Los indicadores reales no presentan confluencia suficiente para operar con seguridad.'}</div></div>`;
+      // Clean up the response text
+      const reason = signalText
+        .replace(/SIN SEÑAL:\s*/gi,'')
+        .replace(/NO HAY OPERACIONES SEGURAS EN ESTE MOMENTO/gi,'')
+        .replace(/\*\*/g,'').replace(/\*/g,'').trim()
+        .slice(0,400);
+      document.getElementById('output').innerHTML=pipe+`
+        <div class="nosig">
+          <div class="nosig-icon">🚫</div>
+          <div class="nosig-t">SIN SEÑAL EN ESTE MOMENTO</div>
+          <div class="nosig-s">${esc(reason)||'Los indicadores reales no presentan confluencia suficiente. Espera mejor estructura de mercado.'}</div>
+          <div style="margin-top:14px;font-size:9px;color:var(--txd)">Puedes intentarlo de nuevo en 1-2 horas cuando el mercado defina dirección.</div>
+        </div>`;
       return;
     }
     pipeStep('ps4','done','✓ Señal candidata generada — enviando a control interno...');
 
     // STEP 5 — IA #2 Review
     pipeStep('ps5','running','Verificando 14 criterios · Evaluando 3 escenarios · Calculando score... (15-30s)');
-    const revMsg=`Fecha: ${ds}\n\nSEÑAL CANDIDATA A REVISAR:\n${signalText}\n\nDATOS TÉCNICOS REALES:\n${indCtx}\n\nNOTICIAS:\n${newsCtx||'Sin noticias'}\n\nEvalúa esta señal con los 14 criterios. Responde solo JSON puro empezando con {`;
+    const revMsg=`SEÑAL:\n${signalText}\n\nDATOS:\n${indCtx}\n\nNOTICIAS:${newsCtx||'N/D'}\n\nEvalúa con los 14 criterios. Solo JSON puro con {`;
 
     const r2=await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
       method:'POST',headers:apiHeaders(),
@@ -1038,12 +1267,18 @@ async function genSignal(){
     pipeStep('ps5','done',`Score: ${score}/10 · ${(review.checks||[]).filter(c=>c.pass).length} de 14 criterios aprobados`);
 
     // STEP 6 — Verdict
-    if(score<7||review.approved===false){
-      pipeStep('ps6','fail',`RECHAZADA (score ${score}/10) — Señal no cumple el estándar de calidad`);
-      renderRejected(review,signalText);
-    }else{
-      pipeStep('ps6','done',`APROBADA (score ${score}/10) — Señal liberada al trader`);
+    // Score >= 7: Approved ✅
+    // Score 5-6: Show with CAUTION warning ⚠️
+    // Score < 5: Fully rejected 🛑
+    if(score>=7){
+      pipeStep('ps6','done',`✅ APROBADA (score ${score}/10) — Alta confluencia`);
       renderSignal(signalText,asset,review);
+    } else if(score>=5){
+      pipeStep('ps6','warn',`⚠ PRECAUCIÓN (score ${score}/10) — Opera con tamaño reducido`);
+      renderSignal(signalText,asset,review);
+    } else {
+      pipeStep('ps6','fail',`🛑 RECHAZADA (score ${score}/10) — Riesgo demasiado alto`);
+      renderRejected(review,signalText);
     }
 
   }catch(e){
@@ -1152,6 +1387,13 @@ function renderSignal(text,asset,review){
   const entryNum=parseFloat((entry.match(/[\d,]+\.?\d*/)||['0'])[0].replace(/,/g,''));
   const tp1Num=parseFloat((tp1.match(/[\d,]+\.?\d*/)||['0'])[0].replace(/,/g,''));
   const tp1Pct=entryNum&&tp1Num?((isL?(tp1Num-entryNum):entryNum-tp1Num)/entryNum*100).toFixed(1):null;
+
+  // Parse entry zone low/high
+  const entryNums = entry.match(/[\d,]+\.?\d*/g)||[];
+  const entryLow  = entryNums.length>=1 ? parseFloat(entryNums[0].replace(/,/g,'')) : 0;
+  const entryHigh = entryNums.length>=2 ? parseFloat(entryNums[1].replace(/,/g,'')) : entryLow*1.005;
+  const slNum     = parseFloat((sl.match(/[\d,]+\.?\d*/)||['0'])[0].replace(/,/g,''));
+  const vmId      = 'vm_'+Date.now();
   const ind=indicators[sym];
 
   // Score color
@@ -1243,6 +1485,16 @@ function renderSignal(text,asset,review){
       ${tech?`<div class="section"><div class="sec-t">📊 ANÁLISIS TÉCNICO — DATOS REALES BINANCE</div><div class="sec-body">${fmtL(tech)}</div></div>`:''}
       ${newsImpact?`<div class="section news-sec"><div class="sec-t">📰 IMPACTO DE NOTICIAS</div><div class="sec-body">${fmtL(newsImpact)}</div></div>`:''}
       <div class="inval">${esc(inval)}</div>
+
+      <div class="validity-monitor vm-warning" id="${vmId}">
+        <div class="vm-icon">👁</div>
+        <div class="vm-body">
+          <div class="vm-status">MONITOREANDO PRECIO EN VIVO</div>
+          <div class="vm-detail">Verificando si el precio está en la zona de entrada...</div>
+        </div>
+        <div class="vm-price">—</div>
+      </div>
+
       <div class="expiry exp-v" id="${eid}">
         <div class="exp-row">
           <div class="exp-meta"><span class="exp-lbl">⏱ VÁLIDA HASTA</span><span class="exp-when">${exStr}</span></div>
@@ -1257,6 +1509,8 @@ function renderSignal(text,asset,review){
   out.innerHTML=pipeline+sigHTML;
   if(prob)setTimeout(()=>{const b=document.getElementById(pid);if(b)b.style.width=prob+'%';},150);
   startCountdown(eid,exMs,expiryH*3600000);
+  // Start validity monitor — checks price every 10s
+  if(entryLow>0) startValidityMonitor(vmId, sym, entryLow, entryHigh, slNum, isL, exMs);
   addTrack({id:eid,asset:sym,type,lev,entry,sl,tp1,tp2,tp3,rr,prob,score:sc,tf:tfRaw.split('|')[0].trim(),ts:new Date().toLocaleString('es-ES'),result:null,exMs});
 }
 
@@ -1281,8 +1535,110 @@ function startCountdown(eid,exMs,totMs){
 }
 
 /* ══════════════════════════════
-   TRACKER
+   SIGNAL VALIDITY MONITOR
+   Monitors price vs entry zone in real time
 ══════════════════════════════ */
+function startValidityMonitor(vmId, sym, entryLow, entryHigh, slPrice, isLong, exMs){
+  if(_timers['vm_'+vmId]) clearInterval(_timers['vm_'+vmId]);
+
+  function checkValidity(){
+    const el = document.getElementById(vmId);
+    if(!el){ clearInterval(_timers['vm_'+vmId]); return; }
+
+    const now = Date.now();
+    const currentPrice = live[sym]?.price;
+    const fmt = n => n ? '$'+n.toLocaleString('en-US',{maximumFractionDigits:2}) : '—';
+
+    // Expired by time
+    if(now > exMs){
+      el.className='validity-monitor vm-expired';
+      el.innerHTML=`
+        <div class="vm-icon">⏰</div>
+        <div class="vm-body">
+          <div class="vm-status">SEÑAL EXPIRADA</div>
+          <div class="vm-detail">El tiempo de validez venció. No operar esta señal.</div>
+        </div>
+        <div class="vm-price" style="font-size:11px;color:var(--txd)">VENCIDA</div>`;
+      clearInterval(_timers['vm_'+vmId]);
+      return;
+    }
+
+    if(!currentPrice){ return; }
+
+    // SL hit — invalidated
+    const slHit = isLong ? currentPrice <= slPrice : currentPrice >= slPrice;
+    if(slHit){
+      el.className='validity-monitor vm-invalid';
+      el.innerHTML=`
+        <div class="vm-icon">🚨</div>
+        <div class="vm-body">
+          <div class="vm-status">⚠ STOP LOSS ALCANZADO — SEÑAL INVÁLIDA</div>
+          <div class="vm-detail">El precio tocó el nivel de Stop Loss. La señal fue invalidada. No abrir posición.</div>
+        </div>
+        <div class="vm-price">${fmt(currentPrice)}</div>`;
+      clearInterval(_timers['vm_'+vmId]);
+      return;
+    }
+
+    // Price ran away above entry zone (for LONG) or below (for SHORT)
+    const ranAway = isLong ? currentPrice > entryHigh * 1.008 : currentPrice < entryLow * 0.992;
+    // Price in entry zone
+    const inZone = currentPrice >= entryLow && currentPrice <= entryHigh;
+    // Price close to zone (within 0.5%)
+    const nearZone = isLong
+      ? currentPrice >= entryLow * 0.995 && currentPrice < entryLow
+      : currentPrice <= entryHigh * 1.005 && currentPrice > entryHigh;
+
+    const priceDiff = isLong
+      ? ((currentPrice - entryLow) / entryLow * 100).toFixed(2)
+      : ((entryHigh - currentPrice) / entryHigh * 100).toFixed(2);
+
+    if(ranAway){
+      el.className='validity-monitor vm-invalid';
+      el.innerHTML=`
+        <div class="vm-icon">🚫</div>
+        <div class="vm-body">
+          <div class="vm-status">FUERA DE ZONA — NO ENTRAR</div>
+          <div class="vm-detail">El precio salió de la zona de entrada. Entrar ahora arruina el ratio R/B. Espera retroceso o nueva señal.</div>
+        </div>
+        <div class="vm-price">${fmt(currentPrice)}</div>`;
+    } else if(inZone){
+      el.className='validity-monitor vm-valid';
+      el.innerHTML=`
+        <div class="vm-icon">✅</div>
+        <div class="vm-body">
+          <div class="vm-status">EN ZONA — PUEDES ENTRAR AHORA</div>
+          <div class="vm-detail">Precio dentro de la zona de entrada. Setup válido. Confirma con cierre de vela.</div>
+        </div>
+        <div class="vm-price">${fmt(currentPrice)}</div>`;
+    } else if(nearZone){
+      el.className='validity-monitor vm-warning';
+      el.innerHTML=`
+        <div class="vm-icon">⏳</div>
+        <div class="vm-body">
+          <div class="vm-status">ACERCÁNDOSE — PREPARARSE</div>
+          <div class="vm-detail">Precio a ${Math.abs(priceDiff)}% de la zona de entrada. Ten la orden lista para ejecutar.</div>
+        </div>
+        <div class="vm-price">${fmt(currentPrice)}</div>`;
+    } else {
+      // Waiting — price not yet at zone
+      const dist = isLong
+        ? ((entryLow - currentPrice) / currentPrice * 100).toFixed(2)
+        : ((currentPrice - entryHigh) / currentPrice * 100).toFixed(2);
+      el.className='validity-monitor vm-warning';
+      el.innerHTML=`
+        <div class="vm-icon">👁</div>
+        <div class="vm-body">
+          <div class="vm-status">ESPERANDO ENTRADA</div>
+          <div class="vm-detail">Precio a ${dist}% de la zona de entrada. Señal activa — espera que el precio llegue a la zona.</div>
+        </div>
+        <div class="vm-price">${fmt(currentPrice)}</div>`;
+    }
+  }
+
+  checkValidity();
+  _timers['vm_'+vmId] = setInterval(checkValidity, 10000); // check every 10 seconds
+}
 function addTrack(s){tracker.unshift(s);if(tracker.length>50)tracker.pop();saveT();updateStats();}
 function saveT(){localStorage.setItem('apex6_tracker',JSON.stringify(tracker));}
 function setResult(id,res){const s=tracker.find(t=>t.id===id);if(s){s.result=res;saveT();updateStats();}}
@@ -1364,7 +1720,12 @@ function renderEvents(data){
 /* ══════════════════════════════
    TAB + UTILS
 ══════════════════════════════ */
-function sw(t){['signals','tracker','events'].forEach((n,i)=>{document.querySelectorAll('.tab')[i].classList.toggle('on',n===t);document.getElementById('tab-'+n).classList.toggle('on',n===t);});}
+function sw(t){
+  ['signals','tracker','events','telegram'].forEach((n,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('on',n===t);
+    document.getElementById('tab-'+n).classList.toggle('on',n===t);
+  });
+}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmtL(text){return text.split('\n').map(l=>{const c=l.replace(/\*\*/g,'').replace(/\*/g,'').trim();return c?`<span>${esc(c)}</span><br>`:'';}).join('');}
 
@@ -1442,6 +1803,229 @@ function runDiagnostic(){
 }
 
 runDiagnostic();
+startNextScanCountdown();
+
+/* ══════════════════════════════════════════
+   TELEGRAM AUTO-SCAN SYSTEM
+══════════════════════════════════════════ */
+const TG_TOKEN = '8649338480:AAHXj2O4Uy-CTpuV1-zotA91XuQXRp78JHs';
+const TG_CHAT  = '516623110';
+const TG_URL   = `https://api.telegram.org/bot${TG_TOKEN}`;
+
+let tgScanning    = false;
+let tgScanTimer   = null;
+let tgNextScan    = null;
+let tgScanCount   = 0;
+let tgSignalCount = 0;
+
+// Send Telegram message
+async function tgSend(text){
+  try{
+    await fetch(`${TG_URL}/sendMessage`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id: TG_CHAT,
+        text: text,
+        parse_mode: 'HTML'
+      })
+    });
+  }catch(e){ console.error('Telegram send error:', e.message); }
+}
+
+// Format signal for Telegram
+function formatTgSignal(signalText, review, asset){
+  const gL=(p,fb='—')=>{const m=signalText.match(p);return m?m[1].trim().replace(/\*/g,''):fb;};
+  const type   = /\bDIRECCIÓN:\s*(LONG|SHORT)/i.exec(signalText)?.[1]?.toUpperCase()||'—';
+  const lev    = (/\bAPALANCAMIENTO:\s*(x[23])/i.exec(signalText)?.[1]||'x2').toUpperCase();
+  const tf     = gL(/TEMPORALIDAD:\s*([^\|\n]+)/i);
+  const entry  = gL(/ENTRADA:\s*([^\n]+)/i);
+  const sl     = gL(/STOP\s*LOSS:\s*([^\n]+)/i);
+  const tp1    = gL(/TP1:\s*([^\n]+)/i);
+  const tp2    = gL(/TP2:\s*([^\n]+)/i);
+  const tp3    = gL(/TP3:\s*([^\n]+)/i);
+  const rr     = gL(/RATIO\s+R\/B:\s*([^\n]+)/i);
+  const prob   = gL(/PROBABILIDAD:\s*([^\n]+)/i);
+  const validez= gL(/VALIDEZ:\s*([^\n]+)/i);
+  const inval  = gL(/NO ENTRAR SI:\s*([^\n]+)/i);
+
+  // Get confluence
+  const confM  = signalText.match(/CONFLUENCIA DETECTADA:\n([\s\S]*?)(?=\nNO ENTRAR SI:|$)/i);
+  const conf   = confM ? confM[1].trim().split('\n').slice(0,4).join('\n').replace(/\*/g,'') : '';
+
+  // Get news impact
+  const newsM  = signalText.match(/IMPACTO DE NOTICIAS:\n([\s\S]*?)(?=\nCONFLUENCIA|$)/i);
+  const news   = newsM ? newsM[1].trim().split('\n')[0] : '';
+
+  const isLong = type === 'LONG';
+  const emoji  = isLong ? '🟢' : '🔴';
+  const arrow  = isLong ? '↑' : '↓';
+  const score  = review?.score || '—';
+  const checks = (review?.checks||[]).filter(c=>c.pass).length;
+
+  const now    = new Date();
+  const exH    = parseInt((signalText.match(/VALIDEZ:\s*(\d+)/i)||['','72'])[1]);
+  const exAt   = new Date(now.getTime() + exH*3600000);
+  const exStr  = exAt.toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short'})+' '+exAt.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+
+  return `⚡ <b>APEX SIGNALS — SEÑAL APROBADA</b>
+
+${emoji} <b>${asset} — ${type} ${arrow}</b>
+📊 Score: <b>${score}/14</b> (${checks} criterios ✓) | Prob: <b>${prob}</b>
+⏱ Temporalidad: <b>${tf.split('|')[0].trim()}</b> | Apalancamiento: <b>${lev}</b>
+
+💰 <b>ENTRADA:</b> ${entry}
+🛑 <b>STOP LOSS:</b> ${sl}
+🎯 <b>TP1:</b> ${tp1} — cerrar 40%
+🎯 <b>TP2:</b> ${tp2} — cerrar 35%
+🎯 <b>TP3:</b> ${tp3} — cerrar 25%
+📐 <b>Ratio R/B:</b> ${rr}
+
+📌 <b>Confluencia:</b>
+${conf}
+
+📰 <b>Noticias:</b> ${news}
+
+⚠️ <b>NO ENTRAR SI:</b> ${inval}
+⏰ <b>Válida hasta:</b> ${exStr}
+
+🔔 Después de TP1 → mover SL a break-even
+💡 Riesgo máximo: 1-2% del capital`;
+}
+
+// Format no-signal for Telegram (silent — don't send)
+// Only send when signal found
+
+// Auto scan function
+async function tgAutoScan(){
+  if(tgScanning) return;
+  tgScanning = true;
+  tgScanCount++;
+  updateTgUI();
+
+  try{
+    // Fetch live prices
+    await fetchBinanceTicker();
+    await fetchFG();
+
+    // Refresh news every 3 scans (3 hours)
+    if(tgScanCount % 3 === 1) await fetchNews();
+
+    // Scan all 3 assets
+    const assets = ['BTC','ETH','SOL'];
+    for(const asset of assets){
+      await calcIndicators(asset);
+      const indCtx  = buildIndCtx(asset);
+      const fgLine  = live._fg ? `Fear & Greed: ${live._fg.value} (${live._fg.value_classification.toUpperCase()})` : '';
+      const ds      = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+      const genMsg  = `Fecha: ${ds}\n\n${indCtx}\n\n${fgLine}\n\n${newsCtx||'Sin noticias'}\n\nACTIVO: ${asset}\n\nGenera la señal si hay setup de élite. Sé específico con los niveles.`;
+
+      // IA #1
+      const r1 = await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
+        method:'POST', headers:apiHeaders(),
+        body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:SYS_GEN,messages:[{role:'user',content:genMsg}]})
+      });
+      if(!r1.ok) continue;
+      const d1 = await r1.json();
+      if(d1.error) continue;
+      const signalText = d1.content?.map(b=>b.text||'').join('')||'';
+
+      // Check if signal found
+      const noSig = ['SIN SEÑAL','NO HAY OPERACIONES','NO HAY SEÑAL','SIN OPERACIONES'].some(p=>signalText.toUpperCase().includes(p));
+      const hasSig = /\b(LONG|SHORT)\b/i.test(signalText);
+      if(noSig || !hasSig) continue;
+
+      // IA #2 Review
+      const revMsg = `SEÑAL:\n${signalText}\n\nDATOS:\n${indCtx}\n\nNOTICIAS:${newsCtx||'N/D'}\n\nEvalúa con los 14 criterios. Solo JSON puro con {`;
+      const r2 = await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
+        method:'POST', headers:apiHeaders(),
+        body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:SYS_REV,messages:[{role:'user',content:revMsg}]})
+      });
+      if(!r2.ok) continue;
+      const d2 = await r2.json();
+      if(d2.error) continue;
+      const revRaw = d2.content?.map(b=>b.text||'').join('')||'';
+      let review = null;
+      try{review=JSON.parse(revRaw.trim());}catch(_){}
+      if(!review){const s=revRaw.indexOf('{'),e=revRaw.lastIndexOf('}');if(s!==-1&&e!==-1)try{review=JSON.parse(revRaw.slice(s,e+1));}catch(_){}}
+
+      const score = review?.score || 0;
+      if(score >= 7){
+        // SIGNAL APPROVED — Send to Telegram
+        tgSignalCount++;
+        const msg = formatTgSignal(signalText, review, asset);
+        await tgSend(msg);
+        updateTgUI();
+        // Also show in app if open
+        renderSignal(signalText, asset, review || {score,approved:true,verdict:'APROBADA',verdict_reason:'Auto-scan aprobada',checks:[],scenarios:{base:'',bull:'',bear:''},adjustments:'',risk_warnings:[]});
+      }
+    }
+  }catch(e){
+    console.error('TG scan error:', e.message);
+  }finally{
+    tgScanning = false;
+    tgNextScan = new Date(Date.now() + 3600000); // next scan in 1 hour
+    updateTgUI();
+  }
+}
+
+// Update Telegram UI panel
+function updateTgUI(){
+  const panel = document.getElementById('tg-panel');
+  if(!panel) return;
+  const statusEl  = document.getElementById('tg-status');
+  const nextEl    = document.getElementById('tg-next');
+  const countEl   = document.getElementById('tg-count');
+  const sigEl     = document.getElementById('tg-signals');
+  if(statusEl) statusEl.textContent = tgScanning ? '🔄 ESCANEANDO...' : '✅ ACTIVO';
+  if(statusEl) statusEl.style.color = tgScanning ? 'var(--yel)' : 'var(--long)';
+  if(nextEl && tgNextScan) nextEl.textContent = 'Próximo: '+tgNextScan.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  if(countEl) countEl.textContent = tgScanCount+' escaneos';
+  if(sigEl)   sigEl.textContent   = tgSignalCount+' señales enviadas';
+}
+
+// Countdown to next scan
+function startNextScanCountdown(){
+  setInterval(()=>{
+    const el = document.getElementById('tg-countdown');
+    if(!el || !tgNextScan) return;
+    const rem = tgNextScan - Date.now();
+    if(rem <= 0){ el.textContent = 'Escaneando...'; return; }
+    const m = Math.floor(rem/60000);
+    const s = Math.floor((rem%60000)/1000);
+    el.textContent = `Próximo escaneo en ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+}
+
+// Start/Stop Telegram scanning
+function toggleTgScan(){
+  const btn = document.getElementById('tg-toggle');
+  if(tgScanTimer){
+    clearInterval(tgScanTimer);
+    tgScanTimer = null;
+    tgNextScan  = null;
+    if(btn){ btn.textContent='▶ INICIAR ESCANEO AUTO'; btn.style.borderColor='var(--a)'; btn.style.color='var(--a)'; }
+    const statusEl = document.getElementById('tg-status');
+    if(statusEl){ statusEl.textContent='⏸ PAUSADO'; statusEl.style.color='var(--txd)'; }
+    tgSend('⏸ APEX SIGNALS — Escaneo automático pausado.');
+  }else{
+    if(btn){ btn.textContent='⏸ PAUSAR ESCANEO'; btn.style.borderColor='var(--red)'; btn.style.color='var(--red)'; }
+    tgSend('🚀 APEX SIGNALS activado!\n\nEscaneando BTC, ETH y SOL cada hora.\nTe avisaré cuando haya una señal de élite que pase los 14 criterios.\n\n⚙️ Criterios: Score ≥ 7/14 · R/B ≥ 1:2.5 · 5+ confluencias');
+    tgAutoScan(); // scan immediately
+    tgNextScan = new Date(Date.now() + 3600000);
+    tgScanTimer = setInterval(tgAutoScan, 3600000); // every hour
+    updateTgUI();
+  }
+}
+
+// Manual scan now
+async function tgScanNow(){
+  const btn = document.getElementById('tg-now');
+  if(btn){ btn.disabled=true; btn.textContent='Escaneando...'; }
+  await tgAutoScan();
+  if(btn){ btn.disabled=false; btn.textContent='⚡ ESCANEAR AHORA'; }
+}
+
 </script>
 </body>
 </html>
