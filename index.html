@@ -387,7 +387,9 @@ footer strong{color:var(--red);}
 <!-- SIGNALS TAB -->
 <div id="tab-signals" class="panel on">
   <div class="news-strip" id="news-strip">
-    <strong>📰 NOTICIAS EN VIVO</strong>
+    <strong>📰 NOTICIAS</strong>
+    <div class="ni" style="color:var(--txd)">Se cargan al generar señal — sin costo en segundo plano</div>
+  </div>
     <div class="ni" style="color:var(--a)">Cargando noticias crypto...</div>
   </div>
   <div class="ctrl">
@@ -1833,8 +1835,10 @@ function fmtL(text){return text.split('\n').map(l=>{const c=l.replace(/\*\*/g,''
 /* ══════════════════════════════
    INIT
 ══════════════════════════════ */
-fetchBinanceTicker();fetchFG();fetchNews();calcIndicators('BTC');
-setInterval(fetchBinanceTicker,30000);setInterval(fetchFG,300000);setInterval(fetchNews,600000);
+fetchBinanceTicker();fetchFG();calcIndicators('BTC');
+setInterval(fetchBinanceTicker,30000);setInterval(fetchFG,300000);
+// News: fetch ONLY when generating a signal, NOT automatically every 10 min
+// This prevents burning API credits in background
 updateStats();
 updateKeyBtn();
 
