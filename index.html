@@ -358,23 +358,7 @@ footer strong{color:var(--red);}
   <div class="t-cell"><div class="t-sym">ETH/USDT</div><div class="t-price" id="p-eth">—</div><div class="t-chg" id="c-eth">—</div></div>
   <div class="t-cell"><div class="t-sym">SOL/USDT</div><div class="t-price" id="p-sol">—</div><div class="t-chg" id="c-sol">—</div></div>
   <div class="t-cell"><div class="t-sym">F&G</div><div class="t-price" id="p-fg" style="font-size:13px">—</div><div class="t-chg" id="fg-cl" style="font-size:8px;letter-spacing:1px">—</div></div>
-  <div class="t-cell"><div class="t-sym">FUENTE</div><div class="t-sub"><div class="t-spin"></div><span id="tick-ts" style="font-size:8px">BINANCE</span></div></div>
-</div>
-
-<div class="ind-strip" id="ind-strip">
-  <div class="ind"><div class="ind-l">RSI 14 (1D)</div><div class="ind-v" id="i-rsi" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi-s">—</div></div>
-  <div class="ind"><div class="ind-l">RSI 14 (4H)</div><div class="ind-v" id="i-rsi4" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi4-s">—</div></div>
-  <div class="ind"><div class="ind-l">EMA 50</div><div class="ind-v" id="i-ema50" style="color:var(--a)">—</div><div class="ind-s" id="i-ema50-s">—</div></div>
-  <div class="ind"><div class="ind-l">EMA 200</div><div class="ind-v" id="i-ema200" style="color:var(--a)">—</div><div class="ind-s" id="i-ema200-s">—</div></div>
-  <div class="ind"><div class="ind-l">MACD</div><div class="ind-v" id="i-macd" style="color:var(--yel)">—</div><div class="ind-s" id="i-macd-s">—</div></div>
-  <div class="ind"><div class="ind-l">FUNDING</div><div class="ind-v" id="i-fund" style="color:var(--tx)">—</div><div class="ind-s" id="i-fund-s">—</div></div>
-</div>
-
-<div class="stats">
-  <div class="stat"><div class="stat-l">WIN RATE</div><div class="stat-v" id="s-wr" style="color:var(--a2)">—</div></div>
-  <div class="stat"><div class="stat-l">SEÑALES</div><div class="stat-v" id="s-tot" style="color:var(--a)">0</div></div>
-  <div class="stat"><div class="stat-l">✓ WIN</div><div class="stat-v" id="s-win" style="color:var(--long)">0</div></div>
-  <div class="stat"><div class="stat-l">✗ LOSS</div><div class="stat-v" id="s-loss" style="color:var(--red)">0</div></div>
+  <div class="t-cell"><div class="t-sym">FUENTE</div><div class="t-sub"><div class="t-spin"></div><span id="tick-ts" style="font-size:8px">KRAKEN</span></div></div>
 </div>
 
 <div class="tabs">
@@ -386,12 +370,18 @@ footer strong{color:var(--red);}
 
 <!-- SIGNALS TAB -->
 <div id="tab-signals" class="panel on">
-  <div class="news-strip" id="news-strip">
-    <strong>📰 NOTICIAS</strong>
-    <div class="ni" style="color:var(--txd)">Se cargan al generar señal — sin costo en segundo plano</div>
+
+  <!-- Indicators — only show in signals tab -->
+  <div class="ind-strip" id="ind-strip" style="margin-bottom:12px;">
+    <div class="ind"><div class="ind-l">RSI 14 (1D)</div><div class="ind-v" id="i-rsi" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi-s">—</div></div>
+    <div class="ind"><div class="ind-l">RSI 14 (4H)</div><div class="ind-v" id="i-rsi4" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi4-s">—</div></div>
+    <div class="ind"><div class="ind-l">EMA 50</div><div class="ind-v" id="i-ema50" style="color:var(--a)">—</div><div class="ind-s" id="i-ema50-s">—</div></div>
+    <div class="ind"><div class="ind-l">EMA 200</div><div class="ind-v" id="i-ema200" style="color:var(--a)">—</div><div class="ind-s" id="i-ema200-s">—</div></div>
+    <div class="ind"><div class="ind-l">MACD</div><div class="ind-v" id="i-macd" style="color:var(--yel)">—</div><div class="ind-s" id="i-macd-s">—</div></div>
+    <div class="ind"><div class="ind-l">FUNDING</div><div class="ind-v" id="i-fund" style="color:var(--tx)">—</div><div class="ind-s" id="i-fund-s">—</div></div>
   </div>
-    <div class="ni" style="color:var(--a)">Cargando noticias crypto...</div>
-  </div>
+
+  <!-- Asset selector + Generate button -->
   <div class="ctrl">
     <div class="sel-w">
       <select id="asset" onchange="onAssetChange()">
@@ -401,17 +391,24 @@ footer strong{color:var(--red);}
         <option value="ALL">ALL — LOS 3 ACTIVOS</option>
       </select>
     </div>
-    <div class="info-b">
+    <button class="btn" id="btn-sig" onclick="genSignal()"><span>⚡ GENERAR SEÑAL VERIFICADA</span></button>
+    <div class="info-b" style="font-size:8px;">
       <div class="adot"></div>
       IA GENERADORA → CONTROL INTERNO (14 VERIFICACIONES) → IA VALIDADORA → SEÑAL APROBADA
     </div>
-    <button class="btn" id="btn-sig" onclick="genSignal()"><span>⚡ GENERAR SEÑAL VERIFICADA</span></button>
   </div>
   <div id="output"></div>
 </div>
 
 <!-- TRACKER TAB -->
 <div id="tab-tracker" class="panel">
+  <!-- Stats moved here where they belong -->
+  <div class="stats" style="margin-bottom:12px;">
+    <div class="stat"><div class="stat-l">WIN RATE</div><div class="stat-v" id="s-wr" style="color:var(--a2)">—</div></div>
+    <div class="stat"><div class="stat-l">SEÑALES</div><div class="stat-v" id="s-tot" style="color:var(--a)">0</div></div>
+    <div class="stat"><div class="stat-l">✓ WIN</div><div class="stat-v" id="s-win" style="color:var(--long)">0</div></div>
+    <div class="stat"><div class="stat-l">✗ LOSS</div><div class="stat-v" id="s-loss" style="color:var(--red)">0</div></div>
+  </div>
   <div class="trk-hdr"><div class="trk-t">HISTORIAL</div><button class="btn-sm" onclick="clearAll()">✕ LIMPIAR</button></div>
   <div id="trk-list"><div class="trk-empty">SIN SEÑALES — GENERA UNA PARA EMPEZAR</div></div>
 </div>
