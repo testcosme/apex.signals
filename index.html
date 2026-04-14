@@ -437,69 +437,84 @@ footer strong{color:var(--red);}
 
 <!-- TELEGRAM TAB -->
 <div id="tab-telegram" class="panel">
-  <div id="tg-panel" style="display:flex;flex-direction:column;gap:10px;">
+  <div style="display:flex;flex-direction:column;gap:10px;">
 
-    <!-- Status card -->
+    <!-- GitHub Actions Status -->
     <div style="background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:16px;">
-      <div style="font-family:var(--head);font-size:13px;letter-spacing:2px;color:var(--txb);margin-bottom:14px;">📱 TELEGRAM AUTO-SCAN</div>
+      <div style="font-family:var(--head);font-size:13px;letter-spacing:2px;color:var(--txb);margin-bottom:4px;">⚙️ GITHUB ACTIONS — SCANNER 24/7</div>
+      <div style="font-size:9px;color:var(--txd);margin-bottom:14px;">Corriendo automáticamente en servidores de GitHub — sin necesidad de tener la app abierta</div>
+
+      <!-- Status grid -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+        <div style="background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.2);border-radius:3px;padding:10px 12px;">
           <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ESTADO</div>
-          <div id="tg-status" style="font-family:var(--head);font-size:14px;color:var(--txd);">⏸ INACTIVO</div>
+          <div style="font-family:var(--head);font-size:13px;color:var(--long);">✅ ACTIVO 24/7</div>
         </div>
         <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
-          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">SEÑALES ENVIADAS</div>
-          <div id="tg-signals" style="font-family:var(--head);font-size:14px;color:var(--a2);">0 señales enviadas</div>
+          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">FRECUENCIA</div>
+          <div style="font-family:var(--head);font-size:13px;color:var(--a);">CADA HORA</div>
         </div>
         <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
-          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ESCANEOS</div>
-          <div id="tg-count" style="font-family:var(--head);font-size:14px;color:var(--a);">0 escaneos</div>
+          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ACTIVOS</div>
+          <div style="font-family:var(--head);font-size:12px;color:var(--txb);">BTC + ETH + SOL</div>
         </div>
         <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
-          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">CUENTA REGRESIVA</div>
-          <div id="tg-countdown" style="font-family:var(--head);font-size:11px;color:var(--txd);">—</div>
+          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">COSTO SIN SEÑAL</div>
+          <div style="font-family:var(--head);font-size:13px;color:var(--long);">$0.00</div>
         </div>
       </div>
 
-      <!-- Info -->
-      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:3px;padding:10px 13px;margin-bottom:12px;font-size:9px;color:var(--txd);line-height:1.8;">
-        <div style="color:var(--a);font-family:var(--head);font-size:9px;letter-spacing:2px;margin-bottom:5px;">⚙️ CONFIGURACIÓN</div>
-        🔄 Escaneo automático cada <strong style="color:var(--tx)">1 hora</strong><br>
-        📊 Analiza <strong style="color:var(--tx)">BTC + ETH + SOL</strong> en cada escaneo<br>
-        ✅ Solo envía si score <strong style="color:var(--tx)">≥ 7/14</strong> criterios<br>
-        💰 Costo estimado: <strong style="color:var(--tx)">~$0.25/día</strong>
+      <!-- How it works -->
+      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:3px;padding:12px;margin-bottom:12px;font-size:9px;color:var(--txd);line-height:2;">
+        <div style="color:var(--a);font-family:var(--head);font-size:9px;letter-spacing:2px;margin-bottom:6px;">🔄 FLUJO AUTOMÁTICO</div>
+        1️⃣ GitHub corre el scanner cada hora en sus servidores<br>
+        2️⃣ Prefiltro revisa volumen, RSI y estructura — <strong style="color:var(--long)">gratis</strong><br>
+        3️⃣ Si hay setup → llama a Claude IA — <strong style="color:var(--yel)">~$0.02</strong><br>
+        4️⃣ Si pasa 14 criterios → mensaje a tu Telegram al instante<br>
+        5️⃣ Si no hay señal → silencio, sin gastar créditos
       </div>
 
-      <!-- Buttons -->
+      <!-- Telegram bot info -->
+      <div style="background:rgba(124,92,255,.05);border:1px solid rgba(124,92,255,.2);border-radius:3px;padding:12px;margin-bottom:12px;">
+        <div style="font-family:var(--head);font-size:9px;color:var(--a3);letter-spacing:2px;margin-bottom:8px;">📱 TU BOT DE TELEGRAM</div>
+        <div style="font-size:10px;color:var(--txd);line-height:1.8;">
+          Bot: <strong style="color:var(--txb)">@Cosmesigals_bot</strong><br>
+          Las señales llegarán automáticamente cuando el mercado se active.<br>
+          También recibes un <strong style="color:var(--txb)">resumen diario</strong> cada mañana.
+        </div>
+      </div>
+
+      <!-- Test button -->
+      <button id="tg-test" onclick="tgTest()" style="width:100%;background:transparent;border:1px solid var(--a2);color:var(--a2);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:12px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,255,157,.1)'" onmouseout="this.style.background='transparent'">
+        🔔 ENVIAR MENSAJE DE PRUEBA A TELEGRAM
+      </button>
+    </div>
+
+    <!-- Signal levels info -->
+    <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:4px;padding:14px;">
+      <div style="font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--txb);margin-bottom:12px;">📊 NIVELES DE SEÑAL</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <button id="tg-test" onclick="tgTest()" style="width:100%;background:transparent;border:1px solid var(--a2);color:var(--a2);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:11px;border-radius:3px;cursor:pointer;transition:all .2s;">
-          🔔 ENVIAR MENSAJE DE PRUEBA
-        </button>
-        <button id="tg-toggle" onclick="toggleTgScan()" style="width:100%;background:transparent;border:1px solid var(--a);color:var(--a);font-family:var(--head);font-size:13px;letter-spacing:3px;padding:13px;border-radius:3px;cursor:pointer;transition:all .2s;">
-          ▶ INICIAR ESCANEO AUTO
-        </button>
-        <button id="tg-now" onclick="tgScanNow()" style="width:100%;background:transparent;border:1px solid var(--bd);color:var(--txd);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:11px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--a3)';this.style.color='var(--a3)'" onmouseout="this.style.borderColor='var(--bd)';this.style.color='var(--txd)'">
-          ⚡ ESCANEAR AHORA
-        </button>
+        <div style="background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.2);border-radius:3px;padding:10px 12px;">
+          <div style="font-family:var(--head);font-size:11px;color:var(--long);margin-bottom:3px;">🏆 SEÑAL ÉLITE</div>
+          <div style="font-size:9px;color:var(--txd);line-height:1.7;">Score 10-14/14 · R/B ≥ 1:3 · 5+ confluencias<br>Capital recomendado: <strong style="color:var(--long)">2% del capital</strong></div>
+        </div>
+        <div style="background:rgba(255,179,0,.05);border:1px solid rgba(255,179,0,.2);border-radius:3px;padding:10px 12px;">
+          <div style="font-family:var(--head);font-size:11px;color:var(--yel);margin-bottom:3px;">⚡ OPORTUNIDAD</div>
+          <div style="font-size:9px;color:var(--txd);line-height:1.7;">Score 6-9/14 · R/B ≥ 1:2 · 3+ confluencias<br>Capital recomendado: <strong style="color:var(--yel)">0.5-1% del capital</strong></div>
+        </div>
+        <div style="background:rgba(255,48,80,.04);border:1px solid rgba(255,48,80,.15);border-radius:3px;padding:10px 12px;">
+          <div style="font-family:var(--head);font-size:11px;color:var(--red);margin-bottom:3px;">🚫 SIN SEÑAL</div>
+          <div style="font-size:9px;color:var(--txd);">Score &lt;6 · Sin confluencia suficiente · No operar</div>
+        </div>
       </div>
     </div>
 
-    <!-- How it works -->
-    <div style="background:var(--s1);border:1px solid var(--bd2);border-left:3px solid var(--a3);border-radius:3px;padding:14px;">
-      <div style="font-family:var(--head);font-size:9px;color:var(--a3);letter-spacing:2px;margin-bottom:8px;">¿CÓMO FUNCIONA?</div>
-      <div style="font-size:10px;color:var(--txd);line-height:1.9;">
-        1. Presiona <strong style="color:var(--tx)">INICIAR ESCANEO AUTO</strong><br>
-        2. Cada hora la app analiza BTC, ETH y SOL en segundo plano<br>
-        3. Si hay señal que pasa los 14 criterios → te llega a Telegram al instante<br>
-        4. Puedes usar <strong style="color:var(--tx)">ESCANEAR AHORA</strong> para forzar un escaneo inmediato<br>
-        5. La app debe estar abierta en el navegador para que funcione
-      </div>
-    </div>
-
-    <!-- Warning -->
-    <div style="background:rgba(255,179,0,.04);border:1px solid rgba(255,179,0,.2);border-radius:3px;padding:12px 14px;font-size:9px;color:var(--yel);line-height:1.8;">
-      ⚠️ <strong>La app debe estar abierta</strong> en el navegador para que el escaneo funcione.<br>
-      Para escaneo 24/7 sin tener el navegador abierto necesitarías un servidor dedicado.
+    <!-- Ver GitHub Actions -->
+    <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:14px;text-align:center;">
+      <div style="font-size:9px;color:var(--txd);margin-bottom:8px;">Ver historial de escaneos en tiempo real:</div>
+      <a href="https://github.com/testcosme/apex.signals/actions" target="_blank" style="color:var(--a);font-family:var(--head);font-size:10px;letter-spacing:2px;text-decoration:none;border:1px solid rgba(0,229,255,.3);padding:8px 16px;border-radius:3px;display:inline-block;">
+        🔗 VER GITHUB ACTIONS
+      </a>
     </div>
 
   </div>
