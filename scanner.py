@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-APEX SIGNALS — Auto Scanner
+APEX SIGNALS — Auto Scanner v2.1
 Runs via GitHub Actions every hour
 Scans BTC, ETH, SOL and sends Telegram alerts
 """
@@ -20,6 +20,8 @@ BINANCE_F = 'https://fapi.binance.com/fapi/v1'
 SYMBOLS   = ['BTC', 'ETH', 'SOL']
 PAIRS     = {'BTC': 'BTCUSDT', 'ETH': 'ETHUSDT', 'SOL': 'SOLUSDT'}
 
+print('APEX SIGNALS Scanner v2.1 — with CoinGecko fallback')
+
 # ── TELEGRAM ─────────────────────────────────────────
 def tg_send(text):
     try:
@@ -36,7 +38,6 @@ def tg_send(text):
 # ── BINANCE DATA ──────────────────────────────────────
 def get_candles(symbol, interval, limit):
     try:
-        # Try main Binance API first
         urls = [
             f'{BINANCE}/klines',
             f'https://api1.binance.com/api/v3/klines',
@@ -52,13 +53,15 @@ def get_candles(symbol, interval, limit):
                     'limit': limit
                 }, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
                 raw = r.json()
+                # Debug: print first element to see format
                 if isinstance(raw, list) and len(raw) > 0:
+                    print(f'  DEBUG {symbol} {interval} first element type: {type(raw[0]).__name__} = {str(raw[0])[:80]}')
                     data = raw
                     break
                 else:
-                    print(f'  Binance {url.split("/")[2]} returned: {str(raw)[:100]}')
+                    print(f'  DEBUG {symbol} {interval} non-list response: {str(raw)[:150]}')
             except Exception as e:
-                print(f'  URL {url} failed: {e}')
+                print(f'  URL failed: {e}')
                 continue
 
         if not data:
@@ -75,7 +78,17 @@ def get_candles(symbol, interval, limit):
                         'close': float(c[4]),
                         'vol':   float(c[5])
                     })
-            except (ValueError, IndexError, TypeError):
+                elif isinstance(c, dict):
+                    # Handle dict format
+                    candles.append({
+                        'open':  float(c.get('open', c.get('o', 0))),
+                        'high':  float(c.get('high', c.get('h', 0))),
+                        'low':   float(c.get('low', c.get('l', 0))),
+                        'close': float(c.get('close', c.get('c', 0))),
+                        'vol':   float(c.get('volume', c.get('v', 0)))
+                    })
+            except (ValueError, IndexError, TypeError) as e:
+                print(f'  Candle parse error: {e} for {str(c)[:50]}')
                 continue
         return candles
     except Exception as e:
