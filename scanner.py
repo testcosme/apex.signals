@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-APEX SIGNALS — Auto Scanner v2.1
-Runs via GitHub Actions every hour
-Scans BTC, ETH, SOL and sends Telegram alerts
+APEX SIGNALS — Auto Scanner v3.0
+Uses Kraken API (works from GitHub Actions US servers)
 """
 
 import os
@@ -15,12 +14,17 @@ TG_TOKEN  = os.environ.get('TG_TOKEN', '8649338480:AAHXj2O4Uy-CTpuV1-zotA91XuQXR
 TG_CHAT   = os.environ.get('TG_CHAT',  '7130790427')
 ANTH_KEY  = os.environ.get('ANTHROPIC_API_KEY', '')
 MODEL     = 'claude-sonnet-4-5'
-BINANCE   = 'https://api.binance.com/api/v3'
-BINANCE_F = 'https://fapi.binance.com/fapi/v1'
 SYMBOLS   = ['BTC', 'ETH', 'SOL']
-PAIRS     = {'BTC': 'BTCUSDT', 'ETH': 'ETHUSDT', 'SOL': 'SOLUSDT'}
 
-print('APEX SIGNALS Scanner v2.1 — with CoinGecko fallback')
+# Kraken pair names
+KRAKEN_PAIRS = {
+    'BTC': 'XBTUSD',
+    'ETH': 'ETHUSD',
+    'SOL': 'SOLUSD'
+}
+KRAKEN_BASE = 'https://api.kraken.com/0/public'
+
+print('APEX SIGNALS Scanner v3.0 — Kraken API')
 
 # ── TELEGRAM ─────────────────────────────────────────
 def tg_send(text):
@@ -35,116 +39,83 @@ def tg_send(text):
         print(f'Telegram error: {e}')
         return False
 
-# ── BINANCE DATA ──────────────────────────────────────
-def get_candles(symbol, interval, limit):
-    try:
-        urls = [
-            f'{BINANCE}/klines',
-            f'https://api1.binance.com/api/v3/klines',
-            f'https://api2.binance.com/api/v3/klines',
-            f'https://api3.binance.com/api/v3/klines',
-        ]
-        data = None
-        for url in urls:
-            try:
-                r = requests.get(url, params={
-                    'symbol': f'{symbol}USDT',
-                    'interval': interval,
-                    'limit': limit
-                }, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
-                raw = r.json()
-                # Debug: print first element to see format
-                if isinstance(raw, list) and len(raw) > 0:
-                    print(f'  DEBUG {symbol} {interval} first element type: {type(raw[0]).__name__} = {str(raw[0])[:80]}')
-                    data = raw
-                    break
-                else:
-                    print(f'  DEBUG {symbol} {interval} non-list response: {str(raw)[:150]}')
-            except Exception as e:
-                print(f'  URL failed: {e}')
+# ── KRAKEN DATA ───────────────────────────────────────
+def get_ticker():
+    """Get current prices from Kraken"""
+    result = {}
+    for sym, pair in KRAKEN_PAIRS.items():
+        try:
+            r = requests.get(f'{KRAKEN_BASE}/Ticker', params={'pair': pair}, timeout=10)
+            data = r.json()
+            if data.get('error'):
+                print(f'Kraken ticker error {sym}: {data["error"]}')
                 continue
+            tick = list(data['result'].values())[0]
+            result[sym] = {
+                'price': float(tick['c'][0]),  # last trade price
+                'chg':   0,                     # Kraken doesn't give 24h% directly
+                'vol':   float(tick['v'][1])    # 24h volume
+            }
+            print(f'  {sym}: ${result[sym]["price"]:,.2f}')
+        except Exception as e:
+            print(f'Ticker error {sym}: {e}')
+    return result
 
-        if not data:
+def get_candles(symbol, interval_hours, limit):
+    """Get OHLC candles from Kraken"""
+    pair = KRAKEN_PAIRS.get(symbol)
+    if not pair:
+        return []
+    try:
+        # Kraken intervals in minutes: 1,5,15,30,60,240,1440,10080,21600
+        interval_map = {
+            '1d': 1440,   # daily
+            '4h': 240,    # 4 hours
+            '1w': 10080   # weekly
+        }
+        interval = interval_map.get(interval_hours, 1440)
+        r = requests.get(f'{KRAKEN_BASE}/OHLC', params={
+            'pair': pair,
+            'interval': interval
+        }, timeout=15)
+        data = r.json()
+        if data.get('error'):
+            print(f'Kraken candles error {symbol} {interval_hours}: {data["error"]}')
             return []
-
+        ohlc = list(data['result'].values())[0]
         candles = []
-        for c in data:
+        for c in ohlc[-limit:]:
             try:
-                if isinstance(c, list) and len(c) >= 6:
-                    candles.append({
-                        'open':  float(c[1]),
-                        'high':  float(c[2]),
-                        'low':   float(c[3]),
-                        'close': float(c[4]),
-                        'vol':   float(c[5])
-                    })
-                elif isinstance(c, dict):
-                    # Handle dict format
-                    candles.append({
-                        'open':  float(c.get('open', c.get('o', 0))),
-                        'high':  float(c.get('high', c.get('h', 0))),
-                        'low':   float(c.get('low', c.get('l', 0))),
-                        'close': float(c.get('close', c.get('c', 0))),
-                        'vol':   float(c.get('volume', c.get('v', 0)))
-                    })
-            except (ValueError, IndexError, TypeError) as e:
-                print(f'  Candle parse error: {e} for {str(c)[:50]}')
+                candles.append({
+                    'open':  float(c[1]),
+                    'high':  float(c[2]),
+                    'low':   float(c[3]),
+                    'close': float(c[4]),
+                    'vol':   float(c[6])
+                })
+            except (ValueError, IndexError):
                 continue
         return candles
     except Exception as e:
-        print(f'Candles error {symbol} {interval}: {e}')
+        print(f'Candles error {symbol} {interval_hours}: {e}')
         return []
 
-def get_ticker():
-    try:
-        # Try with list of symbols first
-        r = requests.get(f'{BINANCE}/ticker/24hr',
-            params={'symbols': '["BTCUSDT","ETHUSDT","SOLUSDT"]'},
-            timeout=10)
-        data = r.json()
-        result = {}
-        if isinstance(data, list):
-            for d in data:
-                sym = d['symbol'].replace('USDT', '')
-                result[sym] = {
-                    'price': float(d['lastPrice']),
-                    'chg':   float(d['priceChangePercent']),
-                    'vol':   float(d['volume'])
-                }
-        elif isinstance(data, dict) and 'lastPrice' in data:
-            # Single symbol response
-            sym = data['symbol'].replace('USDT', '')
-            result[sym] = {
-                'price': float(data['lastPrice']),
-                'chg':   float(data['priceChangePercent']),
-                'vol':   float(data['volume'])
-            }
-        # If empty, try one by one
-        if not result:
-            for sym in ['BTC', 'ETH', 'SOL']:
-                try:
-                    r2 = requests.get(f'{BINANCE}/ticker/24hr',
-                        params={'symbol': f'{sym}USDT'}, timeout=10)
-                    d = r2.json()
-                    if 'lastPrice' in d:
-                        result[sym] = {
-                            'price': float(d['lastPrice']),
-                            'chg':   float(d['priceChangePercent']),
-                            'vol':   float(d['volume'])
-                        }
-                except:
-                    continue
-        return result
-    except Exception as e:
-        print(f'Ticker error: {e}')
-        return {}
-
 def get_funding(symbol):
+    """Funding rate not available on Kraken spot — return neutral"""
+    return 0.01  # neutral funding
+
+# ── TELEGRAM ─────────────────────────────────────────
+def tg_send(text):
     try:
-        r = requests.get(f'{BINANCE_F}/premiumIndex', params={'symbol': f'{symbol}USDT'}, timeout=10)
-        return round(float(r.json().get('lastFundingRate', 0)) * 100, 4)
-    except:
-        return None
+        r = requests.post(
+            f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage',
+            json={'chat_id': TG_CHAT, 'text': text, 'parse_mode': 'HTML'},
+            timeout=15
+        )
+        return r.json().get('ok', False)
+    except Exception as e:
+        print(f'Telegram error: {e}')
+        return False
 
 def get_fear_greed():
     try:
@@ -237,50 +208,11 @@ def detect_structure(closes):
             return 'LH/LL — TENDENCIA BAJISTA'
     return 'Rango / indefinido'
 
-def get_candles_coingecko(symbol, days):
-    """Fallback: get OHLC from CoinGecko if Binance is blocked"""
-    ids = {'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana'}
-    cg_id = ids.get(symbol)
-    if not cg_id:
-        return []
-    try:
-        r = requests.get(
-            f'https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc',
-            params={'vs_currency': 'usd', 'days': days},
-            timeout=15
-        )
-        data = r.json()
-        if not isinstance(data, list):
-            return []
-        candles = []
-        for c in data:
-            try:
-                candles.append({
-                    'open':  float(c[1]),
-                    'high':  float(c[2]),
-                    'low':   float(c[3]),
-                    'close': float(c[4]),
-                    'vol':   0
-                })
-            except:
-                continue
-        return candles
-    except Exception as e:
-        print(f'CoinGecko error {symbol}: {e}')
-        return []
-
 def get_indicators(symbol):
     print(f'  Calculating indicators for {symbol}...')
     c1d = get_candles(symbol, '1d', 220)
-    if not c1d:
-        print(f'  Binance blocked — trying CoinGecko fallback...')
-        c1d = get_candles_coingecko(symbol, 220)
     c4h = get_candles(symbol, '4h', 100)
-    if not c4h:
-        c4h = get_candles_coingecko(symbol, 10)
     c1w = get_candles(symbol, '1w', 30)
-    if not c1w:
-        c1w = get_candles_coingecko(symbol, 180)
 
     if not c1d:
         return None
