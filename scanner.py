@@ -36,22 +36,37 @@ def tg_send(text):
 # ── BINANCE DATA ──────────────────────────────────────
 def get_candles(symbol, interval, limit):
     try:
-        r = requests.get(f'{BINANCE}/klines', params={
-            'symbol': f'{symbol}USDT',
-            'interval': interval,
-            'limit': limit
-        }, timeout=15)
-        data = r.json()
-        # Check if Binance returned an error
-        if isinstance(data, dict):
-            print(f'  Binance error for {symbol} {interval}: {data}')
+        # Try main Binance API first
+        urls = [
+            f'{BINANCE}/klines',
+            f'https://api1.binance.com/api/v3/klines',
+            f'https://api2.binance.com/api/v3/klines',
+            f'https://api3.binance.com/api/v3/klines',
+        ]
+        data = None
+        for url in urls:
+            try:
+                r = requests.get(url, params={
+                    'symbol': f'{symbol}USDT',
+                    'interval': interval,
+                    'limit': limit
+                }, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
+                raw = r.json()
+                if isinstance(raw, list) and len(raw) > 0:
+                    data = raw
+                    break
+                else:
+                    print(f'  Binance {url.split("/")[2]} returned: {str(raw)[:100]}')
+            except Exception as e:
+                print(f'  URL {url} failed: {e}')
+                continue
+
+        if not data:
             return []
-        if not isinstance(data, list) or len(data) == 0:
-            return []
+
         candles = []
         for c in data:
             try:
-                # Binance klines format: [openTime, open, high, low, close, volume, ...]
                 if isinstance(c, list) and len(c) >= 6:
                     candles.append({
                         'open':  float(c[1]),
@@ -60,7 +75,7 @@ def get_candles(symbol, interval, limit):
                         'close': float(c[4]),
                         'vol':   float(c[5])
                     })
-            except (ValueError, IndexError, TypeError) as e:
+            except (ValueError, IndexError, TypeError):
                 continue
         return candles
     except Exception as e:
@@ -209,11 +224,50 @@ def detect_structure(closes):
             return 'LH/LL — TENDENCIA BAJISTA'
     return 'Rango / indefinido'
 
+def get_candles_coingecko(symbol, days):
+    """Fallback: get OHLC from CoinGecko if Binance is blocked"""
+    ids = {'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana'}
+    cg_id = ids.get(symbol)
+    if not cg_id:
+        return []
+    try:
+        r = requests.get(
+            f'https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc',
+            params={'vs_currency': 'usd', 'days': days},
+            timeout=15
+        )
+        data = r.json()
+        if not isinstance(data, list):
+            return []
+        candles = []
+        for c in data:
+            try:
+                candles.append({
+                    'open':  float(c[1]),
+                    'high':  float(c[2]),
+                    'low':   float(c[3]),
+                    'close': float(c[4]),
+                    'vol':   0
+                })
+            except:
+                continue
+        return candles
+    except Exception as e:
+        print(f'CoinGecko error {symbol}: {e}')
+        return []
+
 def get_indicators(symbol):
     print(f'  Calculating indicators for {symbol}...')
     c1d = get_candles(symbol, '1d', 220)
+    if not c1d:
+        print(f'  Binance blocked — trying CoinGecko fallback...')
+        c1d = get_candles_coingecko(symbol, 220)
     c4h = get_candles(symbol, '4h', 100)
+    if not c4h:
+        c4h = get_candles_coingecko(symbol, 10)
     c1w = get_candles(symbol, '1w', 30)
+    if not c1w:
+        c1w = get_candles_coingecko(symbol, 180)
 
     if not c1d:
         return None
