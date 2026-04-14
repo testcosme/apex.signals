@@ -405,6 +405,12 @@ footer strong{color:var(--red);}
       IA GENERADORA → CONTROL INTERNO (14 VERIFICACIONES) → IA VALIDADORA → SEÑAL APROBADA
     </div>
   </div>
+
+  <!-- News strip — hidden until signal generated -->
+  <div class="news-strip" id="news-strip" style="display:none;">
+    <strong>📰 NOTICIAS</strong>
+  </div>
+
   <div id="output"></div>
 </div>
 
@@ -569,7 +575,7 @@ const BINANCE='https://api.binance.com/api/v3';
 const BINANCE_F='https://fapi.binance.com/fapi/v1';
 const today=new Date();
 let live={}, indicators={}, tracker=JSON.parse(localStorage.getItem('apex6_tracker')||'[]');
-let newsCtx='', newsLoaded=false;
+let newsCtx='', newsLoaded=false, newsLoadedDate='';
 
 /* ══════════════════════════════
    MARKET STATUS SEMAPHORE
@@ -924,7 +930,8 @@ async function onAssetChange(){
 ══════════════════════════════ */
 async function fetchNews(){
   const strip=document.getElementById('news-strip');
-  strip.innerHTML=`<strong>📰 NOTICIAS EN VIVO</strong><div class="ni" style="color:var(--a)">Buscando noticias crypto en tiempo real...</div>`;
+  if(strip) strip.style.display='block';
+  if(strip) strip.innerHTML=`<strong>📰 NOTICIAS EN VIVO</strong><div class="ni" style="color:var(--a)">Buscando noticias crypto en tiempo real...</div>`;
   const ds=today.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{
@@ -947,6 +954,7 @@ async function fetchNews(){
       const sc=p.sentiment==='BULLISH'?'var(--long)':p.sentiment==='BEARISH'?'var(--red)':'var(--yel)';
       strip.innerHTML=`<strong>📰 NOTICIAS — <span style="color:${sc}">${p.sentiment}</span></strong>${p.headlines.map(h=>`<div class="ni">${esc(h)}</div>`).join('')}`;
       newsLoaded=true;
+      newsLoadedDate=new Date().toDateString();
     }else throw new Error('parse fail');
   }catch(e){
     newsCtx=`Sin noticias disponibles (${today.toLocaleDateString('es-ES')})`;
@@ -1348,10 +1356,14 @@ async function genSignal(){
     const firstInd=indicators[syms[0]];
     pipeStep('ps2','done',`RSI1D:${firstInd?.rsi1d||'—'} EMA50:${firstInd?.ema50?'$'+parseFloat(firstInd.ema50).toLocaleString('en-US',{maximumFractionDigits:0}):'—'} MACD:${firstInd?.macd?.bullish?'BULL':'BEAR'} Vol:${firstInd?.volRatio||'—'}x`);
 
-    // STEP 3 — News
-    pipeStep('ps3','running','Buscando noticias crypto en tiempo real...');
-    if(!newsLoaded)await fetchNews();
-    pipeStep('ps3','done',newsLoaded?'Noticias cargadas y procesadas':'Usando análisis técnico puro');
+    // STEP 3 — News (load once per day only)
+    const todayStr = new Date().toDateString();
+    if(!newsLoaded || newsLoadedDate !== todayStr){
+      pipeStep('ps3','running','Buscando noticias crypto del día...');
+      await fetchNews();
+      newsLoadedDate = todayStr;
+    }
+    pipeStep('ps3','done', newsLoaded ? `Noticias del ${todayStr === newsLoadedDate ? 'día cargadas' : 'día anteriores'}` : 'Usando análisis técnico puro');
 
     // STEP 4 — IA #1 Generate
     pipeStep('ps4','running','Analizando confluencias y generando señal candidata... (20-40s)');
