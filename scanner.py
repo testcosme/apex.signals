@@ -34,24 +34,6 @@ def tg_send(text):
         return False
 
 # ── BINANCE DATA ──────────────────────────────────────
-def get_ticker():
-    try:
-        symbols = json.dumps([f'"{p}USDT"' for p in ['BTC','ETH','SOL']]).replace('"', '\\"')
-        r = requests.get(f'{BINANCE}/ticker/24hr', params={'symbols': '["BTCUSDT","ETHUSDT","SOLUSDT"]'}, timeout=10)
-        data = r.json()
-        result = {}
-        for d in data:
-            sym = d['symbol'].replace('USDT', '')
-            result[sym] = {
-                'price': float(d['lastPrice']),
-                'chg': float(d['priceChangePercent']),
-                'vol': float(d['volume'])
-            }
-        return result
-    except Exception as e:
-        print(f'Ticker error: {e}')
-        return {}
-
 def get_candles(symbol, interval, limit):
     try:
         r = requests.get(f'{BINANCE}/klines', params={
@@ -60,16 +42,74 @@ def get_candles(symbol, interval, limit):
             'limit': limit
         }, timeout=15)
         data = r.json()
-        return [{
-            'open':  float(c[1]),
-            'high':  float(c[2]),
-            'low':   float(c[3]),
-            'close': float(c[4]),
-            'vol':   float(c[5])
-        } for c in data]
+        # Check if Binance returned an error
+        if isinstance(data, dict):
+            print(f'  Binance error for {symbol} {interval}: {data}')
+            return []
+        if not isinstance(data, list) or len(data) == 0:
+            return []
+        candles = []
+        for c in data:
+            try:
+                # Binance klines format: [openTime, open, high, low, close, volume, ...]
+                if isinstance(c, list) and len(c) >= 6:
+                    candles.append({
+                        'open':  float(c[1]),
+                        'high':  float(c[2]),
+                        'low':   float(c[3]),
+                        'close': float(c[4]),
+                        'vol':   float(c[5])
+                    })
+            except (ValueError, IndexError, TypeError) as e:
+                continue
+        return candles
     except Exception as e:
         print(f'Candles error {symbol} {interval}: {e}')
         return []
+
+def get_ticker():
+    try:
+        # Try with list of symbols first
+        r = requests.get(f'{BINANCE}/ticker/24hr',
+            params={'symbols': '["BTCUSDT","ETHUSDT","SOLUSDT"]'},
+            timeout=10)
+        data = r.json()
+        result = {}
+        if isinstance(data, list):
+            for d in data:
+                sym = d['symbol'].replace('USDT', '')
+                result[sym] = {
+                    'price': float(d['lastPrice']),
+                    'chg':   float(d['priceChangePercent']),
+                    'vol':   float(d['volume'])
+                }
+        elif isinstance(data, dict) and 'lastPrice' in data:
+            # Single symbol response
+            sym = data['symbol'].replace('USDT', '')
+            result[sym] = {
+                'price': float(data['lastPrice']),
+                'chg':   float(data['priceChangePercent']),
+                'vol':   float(data['volume'])
+            }
+        # If empty, try one by one
+        if not result:
+            for sym in ['BTC', 'ETH', 'SOL']:
+                try:
+                    r2 = requests.get(f'{BINANCE}/ticker/24hr',
+                        params={'symbol': f'{sym}USDT'}, timeout=10)
+                    d = r2.json()
+                    if 'lastPrice' in d:
+                        result[sym] = {
+                            'price': float(d['lastPrice']),
+                            'chg':   float(d['priceChangePercent']),
+                            'vol':   float(d['volume'])
+                        }
+                except:
+                    continue
+        return result
+    except Exception as e:
+        print(f'Ticker error: {e}')
+        return {}
 
 def get_funding(symbol):
     try:
