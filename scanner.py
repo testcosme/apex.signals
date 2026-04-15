@@ -640,6 +640,32 @@ def scan():
     else:
         print(f'\n✅ {signals_found} signal(s) sent to Telegram')
 
+    # ── DAILY SUMMARY — sent at 10:00 UTC, NO API cost ──
+    current_hour = datetime.utcnow().hour
+    if current_hour == 10:
+        btc_p = f"${prices.get('BTC',{}).get('price',0):,.0f}" if prices else '—'
+        eth_p = f"${prices.get('ETH',{}).get('price',0):,.2f}" if prices else '—'
+        sol_p = f"${prices.get('SOL',{}).get('price',0):,.2f}" if prices else '—'
+        btc_chg = prices.get('BTC',{}).get('chg',0)
+        eth_chg = prices.get('ETH',{}).get('chg',0)
+        sol_chg = prices.get('SOL',{}).get('chg',0)
+
+        def chg_emoji(c): return '🟢' if c >= 0 else '🔴'
+
+        daily_msg = f"""📊 <b>APEX SIGNALS — Resumen Diario</b>
+━━━━━━━━━━━━━━━━━━━━
+{chg_emoji(btc_chg)} <b>BTC:</b> {btc_p} ({'+' if btc_chg>=0 else ''}{btc_chg:.2f}%)
+{chg_emoji(eth_chg)} <b>ETH:</b> {eth_p} ({'+' if eth_chg>=0 else ''}{eth_chg:.2f}%)
+{chg_emoji(sol_chg)} <b>SOL:</b> {sol_p} ({'+' if sol_chg>=0 else ''}{sol_chg:.2f}%)
+
+😱 <b>Fear & Greed:</b> {fg}
+
+📡 <b>Estado:</b> {'⚠️ Mercado inactivo' if skipped_prefilter == total else '✅ Mercado activo'}
+⏰ Scanner activo 24/7"""
+
+        ok = tg_send(daily_msg)
+        print(f'\n📱 Daily summary sent to Telegram: {ok}')
+
     print('\n✅ Scan complete')
 
 if __name__ == '__main__':
