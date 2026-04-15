@@ -597,7 +597,12 @@ function apiHeaders(){
 }
 const BINANCE='https://api.binance.com/api/v3';
 const BINANCE_F='https://fapi.binance.com/fapi/v1';
-const today=new Date();
+// Global fetch with timeout
+const fetchWithTimeout = (url, opts, ms=90000) => {
+  const ctrl = new AbortController();
+  const tid = setTimeout(()=>ctrl.abort(), ms);
+  return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+};
 let live={}, indicators={}, tracker=JSON.parse(localStorage.getItem('apex6_tracker')||'[]');
 let newsCtx='', newsLoaded=false, newsLoadedDate='';
 
@@ -1249,13 +1254,6 @@ async function genSignal(){
     const fgLine=live._fg?`Fear & Greed: ${live._fg.value} (${live._fg.value_classification.toUpperCase()})`:'';
     const ds=today.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
     const genMsg=`Fecha: ${ds}\n\n${indCtx}\n\n${fgLine}\n\n${newsCtx||'Sin noticias'}\n\nACTIVO: ${asset==='ALL'?'BTC, ETH y SOL — analiza cada uno':asset}\n\nGenera la señal usando los datos reales. Sé específico con los niveles.`;
-
-    // Timeout helper
-    const fetchWithTimeout = (url, opts, ms=90000) => {
-      const ctrl = new AbortController();
-      const tid = setTimeout(()=>ctrl.abort(), ms);
-      return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(tid));
-    };
 
     const r1=await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
       method:'POST',headers:apiHeaders(),
