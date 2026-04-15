@@ -548,6 +548,10 @@ def scan():
 
             print(f'  ✅ Prefilter passed ({pf_score} pts): {pf_reason}')
 
+            # Capture price at signal generation time
+            price_at_generation = prices.get(sym, {}).get('price', 0)
+            time_at_generation = datetime.utcnow()
+
             ctx = build_ctx(sym, ind, prices)
             ds  = datetime.now().strftime('%A %d de %B de %Y')
             msg = f'Fecha: {ds}\n\n{ctx}\n\nFear & Greed: {fg}\n\nACTIVO: {sym}\n\nGenera señal si hay setup válido.'
@@ -670,6 +674,68 @@ def scan():
                 arrow     = '↑' if direction == 'LONG' else '↓'
                 checks_ok = sum(1 for c in review.get('checks', []) if c.get('pass'))
 
+                # ── ZONE STATUS CHECK ──
+                current_price = prices.get(sym, {}).get('price', 0)
+                zone_status = ''
+                try:
+                    # Extract entry prices
+                    entry_nums = re.findall(r'\$?([\d,]+(?:\.\d+)?)', entry.replace(',',''))
+                    entry_prices = [float(x.replace(',','')) for x in entry_nums if float(x.replace(',','')) > 1000]
+
+                    # Extract SL and TP1
+                    sl_nums = re.findall(r'\$?([\d,]+(?:\.\d+)?)', sl.replace(',',''))
+                    sl_price = float(sl_nums[0].replace(',','')) if sl_nums else 0
+
+                    tp1_nums = re.findall(r'\$?([\d,]+(?:\.\d+)?)', tp1.replace(',',''))
+                    tp1_price = float(tp1_nums[0].replace(',','')) if tp1_nums else 0
+
+                    if current_price and entry_prices:
+                        entry_low = min(entry_prices)
+                        entry_high = max(entry_prices)
+
+                        if direction == 'LONG':
+                            if sl_price and current_price <= sl_price:
+                                zone_status = f'🚨 <b>SL ALCANZADO</b> — No entrar (precio ${current_price:,.0f} bajo SL ${sl_price:,.0f})'
+                            elif tp1_price and current_price >= tp1_price:
+                                zone_status = f'⚡ <b>TP1 ALCANZADO</b> — Movimiento ocurrió, evaluar re-entrada'
+                            elif entry_low <= current_price <= entry_high:
+                                zone_status = f'✅ <b>EN ZONA</b> — Precio ${current_price:,.0f} dentro de zona de entrada'
+                            elif current_price < entry_low:
+                                zone_status = f'⏳ <b>ACERCÁNDOSE</b> — Precio ${current_price:,.0f} bajo zona, esperar'
+                            else:
+                                zone_status = f'❌ <b>FUERA DE ZONA</b> — Precio ${current_price:,.0f} sobre zona, no perseguir'
+                        else:  # SHORT
+                            if sl_price and current_price >= sl_price:
+                                zone_status = f'🚨 <b>SL ALCANZADO</b> — No entrar (precio ${current_price:,.0f} sobre SL ${sl_price:,.0f})'
+                            elif tp1_price and current_price <= tp1_price:
+                                zone_status = f'⚡ <b>TP1 ALCANZADO</b> — Movimiento ocurrió, evaluar re-entrada'
+                            elif entry_low <= current_price <= entry_high:
+                                zone_status = f'✅ <b>EN ZONA</b> — Precio ${current_price:,.0f} dentro de zona de entrada'
+                            elif current_price > entry_high:
+                                zone_status = f'⏳ <b>ACERCÁNDOSE</b> — Precio ${current_price:,.0f} sobre zona, esperar'
+                            else:
+                                zone_status = f'❌ <b>FUERA DE ZONA</b> — Precio ${current_price:,.0f} bajo zona, no perseguir'
+                except:
+                    zone_status = f'📍 Precio actual: ${current_price:,.0f}'
+
+                # ── MOVEMENT DURING DELAY ──
+                delay_info = ''
+                try:
+                    if price_at_generation and current_price:
+                        price_diff = current_price - price_at_generation
+                        price_diff_pct = (price_diff / price_at_generation) * 100
+                        minutes_elapsed = int((datetime.utcnow() - time_at_generation).total_seconds() / 60)
+
+                        if abs(price_diff_pct) >= 1.0:
+                            move_emoji = '📈' if price_diff > 0 else '📉'
+                            sign = '+' if price_diff_pct >= 0 else ''
+                            warning = '⚠️ MOVIMIENTO SIGNIFICATIVO — Ver velas 4H antes de entrar' if abs(price_diff_pct) >= 2.0 else '⚡ Movimiento moderado'
+                            delay_info = f'\n{move_emoji} Precio al generar: ${price_at_generation:,.0f} → Ahora: ${current_price:,.0f} ({sign}{price_diff_pct:.1f}% en {minutes_elapsed}min)\n{warning}'
+                        else:
+                            delay_info = f'\n✅ Sin movimiento significativo desde generación (${price_at_generation:,.0f} → ${current_price:,.0f})'
+                except:
+                    pass
+
                 tg_msg = f"""{level_emoji} — <b>APEX SIGNALS</b>
 
 {dir_emoji} <b>{sym} — {direction} {arrow}</b>
@@ -683,6 +749,8 @@ def scan():
 🎯 <b>TP2:</b> {tp2} — cerrar 35%
 🎯 <b>TP3:</b> {tp3} — cerrar 25%
 📐 <b>Ratio R/B:</b> {rr}
+
+{zone_status}{delay_info}
 
 ⚠️ <b>NO ENTRAR SI:</b> {inval}
 ⏰ <b>Válida:</b> {validez}
