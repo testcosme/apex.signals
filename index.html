@@ -595,8 +595,6 @@ function apiHeaders(){
   if(!k) throw new Error('Falta la API Key. Haz click en "🔑 API KEY" en la esquina superior derecha y pega tu key de Anthropic.');
   return{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
 }
-const BINANCE='https://api.binance.com/api/v3';
-const BINANCE_F='https://fapi.binance.com/fapi/v1';
 // Global fetch with timeout
 const fetchWithTimeout = (url, opts, ms=90000) => {
   const ctrl = new AbortController();
@@ -821,13 +819,11 @@ function detectStructure(closes){
 /* ══════════════════════════════
    BINANCE FETCH — CORS PROXY
 ══════════════════════════════ */
-// Binance doesn't allow direct browser calls — use public CORS proxies
 const BINANCE_PROXY = 'https://api.binance.com/api/v3';
 const BINANCE_F_PROXY = 'https://fapi.binance.com/fapi/v1';
 const COINGECKO = 'https://api.coingecko.com/api/v3';
 
-async function safeFetch(url, fallback=null){
-  // Try direct first, then proxy alternatives
+async function safeFetch(url){
   const proxies = [
     url,
     'https://corsproxy.io/?' + encodeURIComponent(url),
@@ -835,7 +831,10 @@ async function safeFetch(url, fallback=null){
   ];
   for(const u of proxies){
     try{
-      const r = await fetch(u, {signal: AbortSignal.timeout(8000)});
+      const ctrl = new AbortController();
+      const tid = setTimeout(()=>ctrl.abort(), 8000);
+      const r = await fetch(u, {signal: ctrl.signal});
+      clearTimeout(tid);
       if(r.ok) return r;
     }catch(e){ continue; }
   }
