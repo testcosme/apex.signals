@@ -545,7 +545,6 @@ def scan():
                 continue
 
             print(f'  ✅ Prefilter passed ({pf_score} pts): {pf_reason}')
-            print(f'  🤖 Calling IA #1...')
 
             ctx = build_ctx(sym, ind, prices)
             ds  = datetime.now().strftime('%A %d de %B de %Y')
@@ -558,6 +557,9 @@ def scan():
             no_sig_phrases = ['SIN SEÑAL', 'NO HAY OPERACIONES', 'NO HAY SEÑAL', 'SIN OPERACIONES']
             is_no_signal = any(p in signal_text.upper() for p in no_sig_phrases)
             has_direction = 'LONG' in signal_text.upper() or 'SHORT' in signal_text.upper()
+
+            # Log first 200 chars of response for debugging
+            print(f'  📝 IA #1 response: {signal_text[:200].replace(chr(10), " ")}')
 
             if is_no_signal or not has_direction:
                 print(f'  ⏳ {sym}: No signal found')
