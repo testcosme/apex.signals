@@ -381,14 +381,16 @@ Evalúa la señal con 14 criterios (1 punto cada uno):
 14. Confluencia suficiente
 
 NIVELES:
-- 10-14: SEÑAL ÉLITE, capital 2%
-- 6-9: OPORTUNIDAD, capital 0.5-1%
-- <6: RECHAZADA
+- 10-14: ELITE, capital 2%
+- 6-9: OPPORTUNITY, capital 0.5-1%
+- <6: REJECTED
 
-Si R/B < 1:2 → RECHAZADA siempre.
+Si R/B < 1:2 → REJECTED siempre.
 
-Responde SOLO JSON puro:
-{"score":8,"level":"OPPORTUNITY","approved":true,"verdict":"OPORTUNIDAD","verdict_reason":"razón","rb_calculated":"1:2.3","capital_recommended":"0.5-1%","checks":[{"criterion":"nombre","pass":true,"detail":"detalle"}],"scenarios":{"base":"...","bull":"...","bear":"..."},"adjustments":"","risk_warnings":[]}"""
+IMPORTANTE: Responde SOLO con JSON puro. Sin texto antes ni después. Sin markdown. Sin backticks. Empieza directamente con { y termina con }.
+
+Formato exacto:
+{"score":8,"level":"OPPORTUNITY","approved":true,"verdict":"OPORTUNIDAD","verdict_reason":"razon concisa","rb_calculated":"1:2.3","capital_recommended":"0.5-1%","checks":[{"criterion":"RSI","pass":true,"detail":"RSI 1D y 4H alineados alcistas"},{"criterion":"EMAs","pass":true,"detail":"Precio sobre EMA50"},{"criterion":"MACD","pass":true,"detail":"MACD alcista sin cruce"},{"criterion":"Volumen","pass":false,"detail":"Vol 0.76x moderado"},{"criterion":"Funding","pass":true,"detail":"Funding neutro -0.007%"},{"criterion":"Estructura","pass":true,"detail":"HH/HL confirmado 1D"},{"criterion":"SL","pass":true,"detail":"SL bajo minimo estructural"},{"criterion":"Entrada","pass":true,"detail":"Entrada en OB $73800-74600"},{"criterion":"TP1","pass":true,"detail":"TP1 en resistencia 20D"},{"criterion":"RB","pass":true,"detail":"R/B 1:2.8 verificado"},{"criterion":"Bollinger","pass":true,"detail":"No sobreextendido"},{"criterion":"Noticias","pass":true,"detail":"Contexto neutral"},{"criterion":"Macro","pass":true,"detail":"Sin eventos HIGH"},{"criterion":"Confluencia","pass":true,"detail":"5 factores alineados"}],"scenarios":{"base":"precio alcanza TP1 en 24-48h con probabilidad 62%","bull":"ruptura hacia TP2-TP3 si volumen aumenta","bear":"SL en $72500 si rompe soporte"},"adjustments":"reducir tamaño si volumen no confirma","risk_warnings":["Death Cross activo — contexto bajista mayor"]}"""
 
 # ── SMART PREFILTER ──────────────────────────────────
 def prefilter(sym, ind):
@@ -627,24 +629,42 @@ def scan():
                 level_emoji = '🏆 SEÑAL ÉLITE' if is_elite else '⚡ OPORTUNIDAD'
                 capital = review.get('capital_recommended', '2%' if is_elite else '0.5-1%')
 
-                # Parse signal fields
+                # Parse signal fields — handle markdown formatting
                 def get_field(pattern, default='—'):
                     import re
                     m = re.search(pattern, signal_text, re.IGNORECASE | re.MULTILINE)
-                    return m.group(1).strip().replace('*','') if m else default
+                    if m:
+                        return m.group(1).strip().replace('*','').replace('_','').strip()
+                    return default
 
-                direction = get_field(r'DIRECCIÓN:\s*(LONG|SHORT)')
-                lev       = get_field(r'APALANCAMIENTO:\s*(x[23])', 'x2')
-                tf        = get_field(r'TEMPORALIDAD:\s*([^\|\n]+)').split('|')[0].strip()
-                entry     = get_field(r'ENTRADA:\s*([^\n]+)')
-                sl        = get_field(r'STOP\s*LOSS:\s*([^\n]+)')
-                tp1       = get_field(r'TP1:\s*([^\n]+)')
-                tp2       = get_field(r'TP2:\s*([^\n]+)')
-                tp3       = get_field(r'TP3:\s*([^\n]+)')
-                rr        = get_field(r'RATIO\s+R/B:\s*([^\n]+)')
-                prob      = get_field(r'PROBABILIDAD:\s*([^\n]+)')
-                validez   = get_field(r'VALIDEZ:\s*([^\n]+)')
-                inval     = get_field(r'NO ENTRAR SI:\s*([^\n]+)')
+                # Direction — try multiple patterns
+                import re
+                direction = '—'
+                for pat in [r'DIRECCIÓN:\s*\*{0,2}(LONG|SHORT)\*{0,2}',
+                           r'\*{0,2}DIRECCIÓN:\*{0,2}\s*(LONG|SHORT)',
+                           r'DIRECCIÓN[:\s]+\**(LONG|SHORT)\**']:
+                    m = re.search(pat, signal_text, re.IGNORECASE)
+                    if m:
+                        direction = m.group(1).upper()
+                        break
+                # Last resort — check if LONG or SHORT appears prominently
+                if direction == '—':
+                    if 'LONG' in signal_text.upper():
+                        direction = 'LONG'
+                    elif 'SHORT' in signal_text.upper():
+                        direction = 'SHORT'
+
+                lev     = get_field(r'APALANCAMIENTO:\s*\*{0,2}(x[23])\*{0,2}', 'x2')
+                tf      = get_field(r'TEMPORALIDAD:\s*\*{0,2}([^\|\n\*]+)').split('|')[0].strip()
+                entry   = get_field(r'ENTRADA:\s*\*{0,2}([^\n\*]+)')
+                sl      = get_field(r'STOP\s*LOSS:\s*\*{0,2}([^\n\*]+)')
+                tp1     = get_field(r'TP1:\s*\*{0,2}([^\n\*]+)')
+                tp2     = get_field(r'TP2:\s*\*{0,2}([^\n\*]+)')
+                tp3     = get_field(r'TP3:\s*\*{0,2}([^\n\*]+)')
+                rr      = get_field(r'RATIO\s+R/B:\s*\*{0,2}([^\n\*]+)')
+                prob    = get_field(r'PROBABILIDAD:\s*\*{0,2}([^\n\*]+)')
+                validez = get_field(r'VALIDEZ:\s*\*{0,2}([^\n\*]+)')
+                inval   = get_field(r'NO ENTRAR SI:\s*\*{0,2}([^\n\*]+)')
 
                 dir_emoji = '🟢' if direction == 'LONG' else '🔴'
                 arrow     = '↑' if direction == 'LONG' else '↓'
