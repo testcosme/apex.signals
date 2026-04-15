@@ -382,176 +382,93 @@ footer strong{color:var(--red);}
   </div>
 
 </div>
-  <button class="tab on" onclick="sw('signals')">⚡ SEÑALES</button>
-  <button class="tab" onclick="sw('tracker')">📊 TRACKER</button>
-  <button class="tab" onclick="sw('events')">📅 EVENTOS</button>
-  <button class="tab" onclick="sw('telegram')">📱 TELEGRAM</button>
+<!-- INDICATORS -->
+<div class="ind-strip" id="ind-strip" style="margin-bottom:12px;">
+  <div class="ind"><div class="ind-l">RSI 14 (1D)</div><div class="ind-v" id="i-rsi" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi-s">—</div></div>
+  <div class="ind"><div class="ind-l">RSI 14 (4H)</div><div class="ind-v" id="i-rsi4" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi4-s">—</div></div>
+  <div class="ind"><div class="ind-l">EMA 50</div><div class="ind-v" id="i-ema50" style="color:var(--a)">—</div><div class="ind-s" id="i-ema50-s">—</div></div>
+  <div class="ind"><div class="ind-l">EMA 200</div><div class="ind-v" id="i-ema200" style="color:var(--a)">—</div><div class="ind-s" id="i-ema200-s">—</div></div>
+  <div class="ind"><div class="ind-l">MACD</div><div class="ind-v" id="i-macd" style="color:var(--yel)">—</div><div class="ind-s" id="i-macd-s">—</div></div>
+  <div class="ind"><div class="ind-l">FUNDING</div><div class="ind-v" id="i-fund" style="color:var(--tx)">—</div><div class="ind-s" id="i-fund-s">—</div></div>
 </div>
 
-<!-- SIGNALS TAB -->
-<div id="tab-signals" class="panel on">
-
-  <!-- Indicators — only show in signals tab -->
-  <div class="ind-strip" id="ind-strip" style="margin-bottom:12px;">
-    <div class="ind"><div class="ind-l">RSI 14 (1D)</div><div class="ind-v" id="i-rsi" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi-s">—</div></div>
-    <div class="ind"><div class="ind-l">RSI 14 (4H)</div><div class="ind-v" id="i-rsi4" style="color:var(--yel)">—</div><div class="ind-s" id="i-rsi4-s">—</div></div>
-    <div class="ind"><div class="ind-l">EMA 50</div><div class="ind-v" id="i-ema50" style="color:var(--a)">—</div><div class="ind-s" id="i-ema50-s">—</div></div>
-    <div class="ind"><div class="ind-l">EMA 200</div><div class="ind-v" id="i-ema200" style="color:var(--a)">—</div><div class="ind-s" id="i-ema200-s">—</div></div>
-    <div class="ind"><div class="ind-l">MACD</div><div class="ind-v" id="i-macd" style="color:var(--yel)">—</div><div class="ind-s" id="i-macd-s">—</div></div>
-    <div class="ind"><div class="ind-l">FUNDING</div><div class="ind-v" id="i-fund" style="color:var(--tx)">—</div><div class="ind-s" id="i-fund-s">—</div></div>
-  </div>
-
-  <!-- Asset selector + Generate button -->
-  <div class="ctrl">
-    <div class="sel-w">
-      <select id="asset" onchange="onAssetChange()">
-        <option value="BTC">BTC — BITCOIN</option>
-        <option value="ETH">ETH — ETHEREUM</option>
-        <option value="SOL">SOL — SOLANA</option>
-        <option value="ALL">ALL — LOS 3 ACTIVOS</option>
-      </select>
-    </div>
-    <button class="btn" id="btn-sig" onclick="genSignal()"><span>⚡ GENERAR SEÑAL VERIFICADA</span></button>
-    <div class="info-b" style="font-size:8px;">
-      <div class="adot"></div>
-      IA GENERADORA → CONTROL INTERNO (14 VERIFICACIONES) → IA VALIDADORA → SEÑAL APROBADA
-    </div>
-  </div>
-
-  <!-- MARKET BRIEF -->
-  <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:4px;padding:14px;margin-bottom:12px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--txb);">🧠 ANÁLISIS DE MERCADO</div>
-      <button id="btn-brief" onclick="genMarketBrief()" style="background:transparent;border:1px solid var(--a3);color:var(--a3);font-family:var(--head);font-size:8px;letter-spacing:2px;padding:5px 12px;border-radius:2px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(124,92,255,.1)'" onmouseout="this.style.background='transparent'">
-        ↻ ANALIZAR
-      </button>
-    </div>
-    <div id="brief-out" style="font-size:10px;color:var(--txd);line-height:1.8;">
-      Presiona <strong style="color:var(--a3)">ANALIZAR</strong> para obtener un resumen simple del mercado actual evaluado por IA.
-    </div>
-  </div>
-
-  <!-- News strip — hidden until signal generated -->
-  <div class="news-strip" id="news-strip" style="display:none;">
-    <strong>📰 NOTICIAS</strong>
-  </div>
-
-  <div id="output"></div>
+<!-- ASSET SELECTOR -->
+<div class="sel-w" style="margin-bottom:12px;">
+  <select id="asset" onchange="onAssetChange()">
+    <option value="BTC">BTC — BITCOIN</option>
+    <option value="ETH">ETH — ETHEREUM</option>
+    <option value="SOL">SOL — SOLANA</option>
+  </select>
 </div>
 
-<!-- TRACKER TAB -->
-<div id="tab-tracker" class="panel">
-  <!-- Stats moved here where they belong -->
-  <div class="stats" style="margin-bottom:12px;">
-    <div class="stat"><div class="stat-l">WIN RATE</div><div class="stat-v" id="s-wr" style="color:var(--a2)">—</div></div>
-    <div class="stat"><div class="stat-l">SEÑALES</div><div class="stat-v" id="s-tot" style="color:var(--a)">0</div></div>
-    <div class="stat"><div class="stat-l">✓ WIN</div><div class="stat-v" id="s-win" style="color:var(--long)">0</div></div>
-    <div class="stat"><div class="stat-l">✗ LOSS</div><div class="stat-v" id="s-loss" style="color:var(--red)">0</div></div>
+<!-- MARKET BRIEF -->
+<div style="background:var(--s1);border:1px solid var(--bd2);border-radius:4px;padding:14px;margin-bottom:12px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--txb);">🧠 ANÁLISIS DE MERCADO</div>
+    <button id="btn-brief" onclick="genMarketBrief()" style="background:transparent;border:1px solid var(--a3);color:var(--a3);font-family:var(--head);font-size:8px;letter-spacing:2px;padding:5px 12px;border-radius:2px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(124,92,255,.1)'" onmouseout="this.style.background='transparent'">
+      ↻ ANALIZAR
+    </button>
   </div>
-  <div class="trk-hdr"><div class="trk-t">HISTORIAL</div><button class="btn-sm" onclick="clearAll()">✕ LIMPIAR</button></div>
-  <div id="trk-list"><div class="trk-empty">SIN SEÑALES — GENERA UNA PARA EMPEZAR</div></div>
-</div>
-
-<!-- EVENTS TAB -->
-<div id="tab-events" class="panel">
-  <div class="ev-top">
-    <div class="ev-date">HOY — <span id="ev-date"></span></div>
-    <button class="btn-ev" id="btn-ev" onclick="loadEvents()">↻ ANALIZAR</button>
-  </div>
-  <div class="ev-leg">
-    <div class="ev-li"><div class="ld" style="background:var(--red)"></div>ALTO</div>
-    <div class="ev-li"><div class="ld" style="background:var(--yel)"></div>MEDIO</div>
-    <div class="ev-li"><div class="ld" style="background:var(--txd)"></div>BAJO</div>
-  </div>
-  <div id="ev-out"><div style="padding:28px;text-align:center;font-size:9px;color:var(--txd);letter-spacing:2px;">PRESIONA "ANALIZAR" PARA CARGAR EVENTOS</div></div>
-</div>
-
-<!-- TELEGRAM TAB -->
-<div id="tab-telegram" class="panel">
-  <div style="display:flex;flex-direction:column;gap:10px;">
-
-    <!-- GitHub Actions Status -->
-    <div style="background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:16px;">
-      <div style="font-family:var(--head);font-size:13px;letter-spacing:2px;color:var(--txb);margin-bottom:4px;">⚙️ GITHUB ACTIONS — SCANNER 24/7</div>
-      <div style="font-size:9px;color:var(--txd);margin-bottom:14px;">Corriendo automáticamente en servidores de GitHub — sin necesidad de tener la app abierta</div>
-
-      <!-- Status grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div style="background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.2);border-radius:3px;padding:10px 12px;">
-          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ESTADO</div>
-          <div style="font-family:var(--head);font-size:13px;color:var(--long);">✅ ACTIVO 24/7</div>
-        </div>
-        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
-          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">FRECUENCIA</div>
-          <div style="font-family:var(--head);font-size:13px;color:var(--a);">CADA HORA</div>
-        </div>
-        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
-          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ACTIVOS</div>
-          <div style="font-family:var(--head);font-size:12px;color:var(--txb);">BTC + ETH + SOL</div>
-        </div>
-        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
-          <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">COSTO SIN SEÑAL</div>
-          <div style="font-family:var(--head);font-size:13px;color:var(--long);">$0.00</div>
-        </div>
-      </div>
-
-      <!-- How it works -->
-      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.12);border-radius:3px;padding:12px;margin-bottom:12px;font-size:9px;color:var(--txd);line-height:2;">
-        <div style="color:var(--a);font-family:var(--head);font-size:9px;letter-spacing:2px;margin-bottom:6px;">🔄 FLUJO AUTOMÁTICO</div>
-        1️⃣ GitHub corre el scanner cada hora en sus servidores<br>
-        2️⃣ Prefiltro revisa volumen, RSI y estructura — <strong style="color:var(--long)">gratis</strong><br>
-        3️⃣ Si hay setup → llama a Claude IA — <strong style="color:var(--yel)">~$0.02</strong><br>
-        4️⃣ Si pasa 14 criterios → mensaje a tu Telegram al instante<br>
-        5️⃣ Si no hay señal → silencio, sin gastar créditos
-      </div>
-
-      <!-- Telegram bot info -->
-      <div style="background:rgba(124,92,255,.05);border:1px solid rgba(124,92,255,.2);border-radius:3px;padding:12px;margin-bottom:12px;">
-        <div style="font-family:var(--head);font-size:9px;color:var(--a3);letter-spacing:2px;margin-bottom:8px;">📱 TU BOT DE TELEGRAM</div>
-        <div style="font-size:10px;color:var(--txd);line-height:1.8;">
-          Bot: <strong style="color:var(--txb)">@Cosmesigals_bot</strong><br>
-          Las señales llegarán automáticamente cuando el mercado se active.<br>
-          También recibes un <strong style="color:var(--txb)">resumen diario</strong> cada mañana.
-        </div>
-      </div>
-
-      <!-- Test button -->
-      <button id="tg-test" onclick="tgTest()" style="width:100%;background:transparent;border:1px solid var(--a2);color:var(--a2);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:12px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,255,157,.1)'" onmouseout="this.style.background='transparent'">
-        🔔 ENVIAR MENSAJE DE PRUEBA A TELEGRAM
-      </button>
-    </div>
-
-    <!-- Signal levels info -->
-    <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:4px;padding:14px;">
-      <div style="font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--txb);margin-bottom:12px;">📊 NIVELES DE SEÑAL</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.2);border-radius:3px;padding:10px 12px;">
-          <div style="font-family:var(--head);font-size:11px;color:var(--long);margin-bottom:3px;">🏆 SEÑAL ÉLITE</div>
-          <div style="font-size:9px;color:var(--txd);line-height:1.7;">Score 10-14/14 · R/B ≥ 1:3 · 5+ confluencias<br>Capital recomendado: <strong style="color:var(--long)">2% del capital</strong></div>
-        </div>
-        <div style="background:rgba(255,179,0,.05);border:1px solid rgba(255,179,0,.2);border-radius:3px;padding:10px 12px;">
-          <div style="font-family:var(--head);font-size:11px;color:var(--yel);margin-bottom:3px;">⚡ OPORTUNIDAD</div>
-          <div style="font-size:9px;color:var(--txd);line-height:1.7;">Score 6-9/14 · R/B ≥ 1:2 · 3+ confluencias<br>Capital recomendado: <strong style="color:var(--yel)">0.5-1% del capital</strong></div>
-        </div>
-        <div style="background:rgba(255,48,80,.04);border:1px solid rgba(255,48,80,.15);border-radius:3px;padding:10px 12px;">
-          <div style="font-family:var(--head);font-size:11px;color:var(--red);margin-bottom:3px;">🚫 SIN SEÑAL</div>
-          <div style="font-size:9px;color:var(--txd);">Score &lt;6 · Sin confluencia suficiente · No operar</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ver GitHub Actions -->
-    <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:14px;text-align:center;">
-      <div style="font-size:9px;color:var(--txd);margin-bottom:8px;">Ver historial de escaneos en tiempo real:</div>
-      <a href="https://github.com/testcosme/apex.signals/actions" target="_blank" style="color:var(--a);font-family:var(--head);font-size:10px;letter-spacing:2px;text-decoration:none;border:1px solid rgba(0,229,255,.3);padding:8px 16px;border-radius:3px;display:inline-block;">
-        🔗 VER GITHUB ACTIONS
-      </a>
-    </div>
-
+  <div id="brief-out" style="font-size:10px;color:var(--txd);line-height:1.8;">
+    Presiona <strong style="color:var(--a3)">ANALIZAR</strong> para obtener un resumen simple del mercado actual evaluado por IA.
   </div>
 </div>
+
+<!-- TELEGRAM STATUS -->
+<div style="background:var(--s1);border:1px solid var(--bd);border-radius:4px;padding:16px;margin-bottom:12px;">
+  <div style="font-family:var(--head);font-size:13px;letter-spacing:2px;color:var(--txb);margin-bottom:4px;">⚙️ GITHUB ACTIONS — SCANNER 24/7</div>
+  <div style="font-size:9px;color:var(--txd);margin-bottom:14px;">Corriendo automáticamente en servidores de GitHub</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+    <div style="background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.2);border-radius:3px;padding:10px 12px;">
+      <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">ESTADO</div>
+      <div style="font-family:var(--head);font-size:13px;color:var(--long);">✅ ACTIVO 24/7</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+      <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">FRECUENCIA</div>
+      <div style="font-family:var(--head);font-size:13px;color:var(--a);">CADA HORA</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+      <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">BOT TELEGRAM</div>
+      <div style="font-family:var(--head);font-size:12px;color:var(--txb);">@Cosmesigals_bot</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:10px 12px;">
+      <div style="font-size:8px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">COSTO SIN SEÑAL</div>
+      <div style="font-family:var(--head);font-size:13px;color:var(--long);">$0.00</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <button id="tg-test" onclick="tgTest()" style="width:100%;background:transparent;border:1px solid var(--a2);color:var(--a2);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:12px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,255,157,.1)'" onmouseout="this.style.background='transparent'">
+      🔔 ENVIAR MENSAJE DE PRUEBA
+    </button>
+    <a href="https://github.com/testcosme/apex.signals/actions" target="_blank" style="display:block;text-align:center;color:var(--a);font-family:var(--head);font-size:10px;letter-spacing:2px;text-decoration:none;border:1px solid rgba(0,229,255,.3);padding:10px;border-radius:3px;">
+      🔗 VER GITHUB ACTIONS
+    </a>
+  </div>
+</div>
+
+<!-- SIGNAL LEVELS -->
+<div style="background:var(--s1);border:1px solid var(--bd2);border-radius:4px;padding:14px;">
+  <div style="font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--txb);margin-bottom:12px;">📊 NIVELES DE SEÑAL</div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.2);border-radius:3px;padding:10px 12px;">
+      <div style="font-family:var(--head);font-size:11px;color:var(--long);margin-bottom:3px;">🏆 SEÑAL ÉLITE</div>
+      <div style="font-size:9px;color:var(--txd);">Score 10-14/14 · R/B ≥ 1:3 · Capital: <strong style="color:var(--long)">2%</strong></div>
+    </div>
+    <div style="background:rgba(255,179,0,.05);border:1px solid rgba(255,179,0,.2);border-radius:3px;padding:10px 12px;">
+      <div style="font-family:var(--head);font-size:11px;color:var(--yel);margin-bottom:3px;">⚡ OPORTUNIDAD</div>
+      <div style="font-size:9px;color:var(--txd);">Score 6-9/14 · R/B ≥ 1:2 · Capital: <strong style="color:var(--yel)">0.5-1%</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden elements needed by JS -->
+<div id="tab-signals" style="display:none;"></div>
+<div id="tab-tracker" style="display:none;"><div id="s-wr"></div><div id="s-tot"></div><div id="s-win"></div><div id="s-loss"></div></div>
+<div id="tab-events" style="display:none;"><span id="ev-date"></span><div id="ev-out"></div></div>
+<div id="tab-telegram" style="display:none;"></div>
+<div id="output" style="display:none;"></div>
+<div id="news-strip" style="display:none;"></div>
   <strong>⚠ RIESGO:</strong> Análisis de IA educativo. No es asesoramiento financiero.<br>
-  Datos: Binance API pública · Indicadores calculados en tiempo real · Doble verificación IA antes de cada señal<br>
   El trading puede resultar en pérdida total del capital.
 </footer>
 </div>
@@ -1801,23 +1718,23 @@ function clearAll(){if(confirm('¿Limpiar historial?')){tracker=[];saveT();updat
 function updateStats(){
   const cl=tracker.filter(t=>t.result),win=cl.filter(t=>t.result!=='SL'),loss=cl.filter(t=>t.result==='SL');
   const wr=cl.length?Math.round(win.length/cl.length*100):null;
-  document.getElementById('s-tot').textContent=tracker.length;
-  document.getElementById('s-win').textContent=win.length;
-  document.getElementById('s-loss').textContent=loss.length;
+  const tot=document.getElementById('s-tot'); if(tot) tot.textContent=tracker.length;
+  const sw=document.getElementById('s-win'); if(sw) sw.textContent=win.length;
+  const sl=document.getElementById('s-loss'); if(sl) sl.textContent=loss.length;
   const wrEl=document.getElementById('s-wr');
-  wrEl.textContent=wr!=null?wr+'%':'—';
-  wrEl.style.color=wr===null?'var(--a2)':wr>=65?'var(--long)':wr>=50?'var(--yel)':'var(--red)';
+  if(wrEl){wrEl.textContent=wr!=null?wr+'%':'—';wrEl.style.color=wr===null?'var(--a2)':wr>=65?'var(--long)':wr>=50?'var(--yel)':'var(--red)';}
   renderTracker();
 }
 function renderTracker(){
   const el=document.getElementById('trk-list');
-  if(!tracker.length){el.innerHTML='<div class="trk-empty">SIN SEÑALES — GENERA UNA PARA EMPEZAR</div>';return;}
+  if(!el) return;
+  if(!tracker.length){el.innerHTML='<div class="trk-empty">SIN SEÑALES</div>';return;}
   el.innerHTML=tracker.map(s=>{
     const exp=s.exMs&&Date.now()>s.exMs&&!s.result;
     const res=s.result
       ?`<span class="${s.result==='SL'?'done-l':'done-w'}">${s.result==='SL'?'✗ SL':'✓ '+s.result}</span>`
       :`<div class="trk-res"><button class="rb rb-tp1" onclick="setResult('${s.id}','TP1')">TP1</button><button class="rb rb-tp2" onclick="setResult('${s.id}','TP2')">TP2</button><button class="rb rb-tp3" onclick="setResult('${s.id}','TP3')">TP3</button><button class="rb rb-sl" onclick="setResult('${s.id}','SL')">SL</button></div>`;
-    return`<div class="trk-i"><div class="trk-sym" style="${s.type==='SHORT'?'color:var(--red)':''}">${esc(s.asset)}</div><div class="trk-meta"><span class="trk-type">${s.type}·${s.tf}·${s.lev}·Score:${s.score||'—'}·${esc(s.ts)}${exp?' <span style="color:var(--red);font-size:7px">EXP</span>':''}</span><span class="trk-en">E:${esc(s.entry)} SL:${esc(s.sl)}</span></div>${res}<button class="trk-x" onclick="removeT('${s.id}')">×</button></div>`;
+    return`<div class="trk-i"><div class="trk-sym">${esc(s.asset)}</div><div class="trk-meta"><span class="trk-type">${s.type}·${s.tf}·${esc(s.ts)}${exp?' EXP':''}</span></div>${res}<button class="trk-x" onclick="removeT('${s.id}')">×</button></div>`;
   }).join('');
 }
 
@@ -1876,8 +1793,10 @@ function renderEvents(data){
 ══════════════════════════════ */
 function sw(t){
   ['signals','tracker','events','telegram'].forEach((n,i)=>{
-    document.querySelectorAll('.tab')[i].classList.toggle('on',n===t);
-    document.getElementById('tab-'+n).classList.toggle('on',n===t);
+    const tab = document.querySelectorAll('.tab')[i];
+    if(tab) tab.classList.toggle('on',n===t);
+    const panel = document.getElementById('tab-'+n);
+    if(panel) panel.classList.toggle('on',n===t);
   });
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
