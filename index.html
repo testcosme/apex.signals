@@ -361,14 +361,25 @@ footer strong{color:var(--red);}
   <div class="t-cell"><div class="t-sym">FUENTE</div><div class="t-sub"><div class="t-spin"></div><span id="tick-ts" style="font-size:8px">KRAKEN</span></div></div>
 </div>
 
-<!-- MARKET STATUS SEMAPHORE -->
-<div id="mkt-status" style="display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:10px 14px;margin-bottom:12px;">
-  <div id="mkt-dot" style="width:12px;height:12px;border-radius:50%;background:var(--txd);flex-shrink:0;transition:all .4s;"></div>
-  <div style="flex:1;">
-    <div id="mkt-label" style="font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--txd);">ANALIZANDO MERCADO...</div>
-    <div id="mkt-detail" style="font-size:9px;color:var(--txd);margin-top:2px;">Cargando indicadores</div>
+<!-- MARKET STATUS SEMAPHORE + RISK LEVEL -->
+<div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px;">
+
+  <div id="mkt-status" style="display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:10px 14px;">
+    <div id="mkt-dot" style="width:12px;height:12px;border-radius:50%;background:var(--txd);flex-shrink:0;transition:all .4s;"></div>
+    <div style="flex:1;">
+      <div id="mkt-label" style="font-family:var(--head);font-size:11px;letter-spacing:2px;color:var(--txd);">ANALIZANDO...</div>
+      <div id="mkt-detail" style="font-size:9px;color:var(--txd);margin-top:2px;">Cargando</div>
+    </div>
+    <div id="mkt-rec" style="font-size:9px;color:var(--txd);text-align:right;font-family:var(--head);letter-spacing:1px;"></div>
   </div>
-  <div id="mkt-rec" style="font-size:9px;color:var(--txd);text-align:right;font-family:var(--head);letter-spacing:1px;"></div>
+
+  <!-- RISK LEVEL -->
+  <div id="risk-box" style="background:var(--s1);border:1px solid var(--bd2);border-radius:3px;padding:10px 14px;text-align:center;min-width:80px;">
+    <div style="font-size:7px;color:var(--txd);letter-spacing:2px;margin-bottom:4px;">RIESGO</div>
+    <div id="risk-level" style="font-family:var(--head);font-size:13px;color:var(--txd);">—</div>
+    <div id="risk-detail" style="font-size:7px;color:var(--txd);margin-top:2px;">—</div>
+  </div>
+
 </div>
   <button class="tab on" onclick="sw('signals')">⚡ SEÑALES</button>
   <button class="tab" onclick="sw('tracker')">📊 TRACKER</button>
@@ -403,6 +414,19 @@ footer strong{color:var(--red);}
     <div class="info-b" style="font-size:8px;">
       <div class="adot"></div>
       IA GENERADORA → CONTROL INTERNO (14 VERIFICACIONES) → IA VALIDADORA → SEÑAL APROBADA
+    </div>
+  </div>
+
+  <!-- MARKET BRIEF -->
+  <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:4px;padding:14px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--txb);">🧠 ANÁLISIS DE MERCADO</div>
+      <button id="btn-brief" onclick="genMarketBrief()" style="background:transparent;border:1px solid var(--a3);color:var(--a3);font-family:var(--head);font-size:8px;letter-spacing:2px;padding:5px 12px;border-radius:2px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(124,92,255,.1)'" onmouseout="this.style.background='transparent'">
+        ↻ ANALIZAR
+      </button>
+    </div>
+    <div id="brief-out" style="font-size:10px;color:var(--txd);line-height:1.8;">
+      Presiona <strong style="color:var(--a3)">ANALIZAR</strong> para obtener un resumen simple del mercado actual evaluado por IA.
     </div>
   </div>
 
@@ -578,8 +602,54 @@ let live={}, indicators={}, tracker=JSON.parse(localStorage.getItem('apex6_track
 let newsCtx='', newsLoaded=false, newsLoadedDate='';
 
 /* ══════════════════════════════
-   MARKET STATUS SEMAPHORE
+   MARKET BRIEF — Simple AI Analysis
 ══════════════════════════════ */
+async function genMarketBrief(){
+  const btn = document.getElementById('btn-brief');
+  const out = document.getElementById('brief-out');
+  const sym = document.getElementById('asset')?.value || 'BTC';
+  const asset = sym === 'ALL' ? 'BTC' : sym;
+
+  btn.disabled = true;
+  btn.textContent = '...';
+  out.innerHTML = '<span style="color:var(--a3)">Analizando mercado...</span>';
+
+  try{
+    const ind = indicators[asset];
+    const pr  = live[asset];
+    if(!ind || !pr){ out.innerHTML='<span style="color:var(--yel)">Carga los indicadores primero</span>'; return; }
+
+    const ctx = buildIndCtx(asset);
+    const fg  = live._fg ? `Fear & Greed: ${live._fg.value} (${live._fg.value_classification})` : '';
+
+    const SYS_BRIEF = `Eres un trader profesional explicándole el mercado a un amigo que no sabe nada de trading. 
+Usa lenguaje SIMPLE, sin jerga técnica. Máximo 4 líneas.
+Explica: 1) Si el mercado está subiendo o bajando 2) Por qué 3) Qué esperar a corto plazo
+Empieza con un emoji: 🟢 si alcista, 🔴 si bajista, 🟡 si neutral/rango.
+Sé directo y claro. Sin tecnicismos.`;
+
+    const msg = `Datos de ${asset}: ${ctx}\n${fg}\nExplica el mercado en 3-4 líneas simples.`;
+
+    const r = await fetchWithTimeout('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:apiHeaders(),
+      body:JSON.stringify({model:'claude-sonnet-4-5', max_tokens:200, system:SYS_BRIEF, messages:[{role:'user',content:msg}]})
+    });
+
+    if(!r.ok) throw new Error('API error '+r.status);
+    const d = await r.json();
+    if(d.error) throw new Error(d.error.message);
+    const text = d.content?.map(b=>b.text||'').join('')||'';
+
+    out.innerHTML = `<div style="color:var(--txb);line-height:1.9;">${esc(text)}</div>
+      <div style="margin-top:8px;font-size:8px;color:var(--txd);">Actualizado: ${new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>`;
+
+  }catch(e){
+    out.innerHTML = `<span style="color:var(--yel)">⚠ Error: ${esc(e.message)}</span>`;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '↻ ANALIZAR';
+  }
+}
 function updateMarketStatus(){
   const sym = document.getElementById('asset')?.value || 'BTC';
   const ind = indicators[sym];
@@ -642,6 +712,33 @@ function updateMarketStatus(){
   label.style.color=color; label.textContent=status;
   detail.textContent=detailTxt;
   rec.style.color=color; rec.textContent=recTxt;
+
+  // ── RISK LEVEL ──
+  const rl = document.getElementById('risk-level');
+  const rd = document.getElementById('risk-detail');
+  const rb = document.getElementById('risk-box');
+  if(rl && rd && rb){
+    let riskLevel, riskColor, riskDetail;
+    const atr = parseFloat(ind.atr||0);
+    const price = parseFloat(ind.price||0);
+    const atrPct = price > 0 ? (atr/price*100) : 0;
+    const fund = Math.abs(parseFloat(ind.fund||0));
+
+    if(atrPct > 3 || fund > 0.08 || fg < 15 || fg > 85){
+      riskLevel = 'ALTO'; riskColor = 'var(--red)';
+      riskDetail = atrPct > 3 ? 'Alta volatilidad' : fund > 0.08 ? 'Funding extremo' : 'Sentimiento extremo';
+    } else if(atrPct > 1.5 || fund > 0.04 || fg < 25 || fg > 75 || vol < 0.5){
+      riskLevel = 'MEDIO'; riskColor = 'var(--yel)';
+      riskDetail = vol < 0.5 ? 'Volumen bajo' : 'Condiciones mixtas';
+    } else {
+      riskLevel = 'BAJO'; riskColor = 'var(--long)';
+      riskDetail = 'Condiciones estables';
+    }
+    rl.style.color = riskColor;
+    rl.textContent = riskLevel;
+    rd.textContent = riskDetail;
+    rb.style.borderColor = riskColor.replace('var(','rgba(').replace(')',', .3)');
+  }
 }
 const _timers={};
 const SYMBOLS={BTC:'BTCUSDT',ETH:'ETHUSDT',SOL:'SOLUSDT'};
