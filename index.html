@@ -596,6 +596,7 @@ function apiHeaders(){
   return{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
 }
 // Global fetch with timeout
+const today = new Date();
 const fetchWithTimeout = (url, opts, ms=90000) => {
   const ctrl = new AbortController();
   const tid = setTimeout(()=>ctrl.abort(), ms);
