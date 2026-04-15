@@ -104,6 +104,28 @@ def get_funding(symbol):
     """Funding rate not available on Kraken spot — return neutral"""
     return 0.01  # neutral funding
 
+def get_open_interest(symbol):
+    """Get Open Interest from Binance Futures — works from GitHub Actions US servers"""
+    try:
+        pair = {'BTC': 'BTCUSDT', 'ETH': 'ETHUSDT', 'SOL': 'SOLUSDT'}.get(symbol)
+        if not pair:
+            return None
+        r = requests.get('https://fapi.binance.com/fapi/v1/openInterest',
+            params={'symbol': pair}, timeout=10)
+        data = r.json()
+        if 'openInterest' in data:
+            oi = float(data['openInterest'])
+            # Get price to convert to USD
+            r2 = requests.get('https://fapi.binance.com/fapi/v1/ticker/price',
+                params={'symbol': pair}, timeout=10)
+            price_data = r2.json()
+            price = float(price_data.get('price', 0))
+            oi_usd = oi * price
+            return round(oi_usd / 1e9, 2)  # in billions
+    except Exception as e:
+        print(f'OI error {symbol}: {e}')
+    return None
+
 # ── TELEGRAM ─────────────────────────────────────────
 def tg_send(text):
     try:
@@ -231,6 +253,7 @@ def get_indicators(symbol):
     vol_ratio = round(vols[-1] / vol_avg, 2) if vol_avg else None
 
     fund = get_funding(symbol)
+    oi = get_open_interest(symbol)
 
     high20d = max(c['high'] for c in c1d[-20:])
     low20d  = min(c['low']  for c in c1d[-20:])
@@ -251,6 +274,7 @@ def get_indicators(symbol):
         'atr':     calc_atr(c1d),
         'vol_ratio': vol_ratio,
         'fund':    fund,
+        'oi':      oi,
         'struct':  detect_structure(closes_1d),
         'high20d': high20d,
         'low20d':  low20d,
@@ -275,6 +299,7 @@ Bollinger: Upper={fmt(ind['bb']['upper'] if ind['bb'] else None)} Mid={fmt(ind['
 ATR 14D: ${ind['atr'] or 'N/D'}
 Volumen ratio vs promedio 20D: {ind['vol_ratio'] or 'N/D'}x
 Funding Rate: {str(ind['fund'])+'%' if ind['fund'] is not None else 'N/D'}
+Open Interest: {str(ind['oi'])+'B USD' if ind.get('oi') else 'N/D'} (OI↑+precio↑=tendencia real | OI↓+precio↑=rally falso)
 Estructura: {ind['struct']}
 Resistencia 20D: {fmt(ind['high20d'])} | Soporte 20D: {fmt(ind['low20d'])}"""
 
