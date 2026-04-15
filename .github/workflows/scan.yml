@@ -2,10 +2,8 @@ name: APEX SIGNALS — Auto Scanner
 
 on:
   schedule:
-    # Runs every hour at minute 0
-    - cron: '0 * * * *'
+    - cron: '*/15 * * * *'
   workflow_dispatch:
-    # Allows manual trigger from GitHub Actions tab
 
 jobs:
   scan:
@@ -29,4 +27,5 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT: ${{ secrets.TG_CHAT }}
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         run: python scanner.py
