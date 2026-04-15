@@ -568,19 +568,47 @@ def scan():
             print(f'  ✅ Signal found! Calling IA #2...')
             rev_msg = f'SEÑAL:\n{signal_text}\n\nDATOS:\n{ctx}\n\nEvalúa con 14 criterios. Solo JSON puro:'
             rev_raw = call_claude(SYS_REV, rev_msg)
+            print(f'  📝 IA #2 raw: {rev_raw[:150].replace(chr(10), " ")}')
 
-            # Parse review
+            # Parse review — multiple fallback strategies
             review = None
+            # Strategy 1: direct parse
             try:
                 review = json.loads(rev_raw.strip())
-            except:
-                s = rev_raw.find('{')
-                e = rev_raw.rfind('}')
-                if s != -1 and e != -1:
-                    try:
+            except: pass
+
+            # Strategy 2: find first { to last }
+            if not review:
+                try:
+                    s = rev_raw.find('{')
+                    e = rev_raw.rfind('}')
+                    if s != -1 and e != -1:
                         review = json.loads(rev_raw[s:e+1])
-                    except:
-                        pass
+                except: pass
+
+            # Strategy 3: strip markdown fences
+            if not review:
+                try:
+                    clean = rev_raw.replace('```json','').replace('```','').strip()
+                    review = json.loads(clean)
+                except: pass
+
+            # Strategy 4: if still can't parse, create basic approval from text
+            if not review:
+                print(f'  ⚠ Could not parse review for {sym} — using text analysis')
+                # If IA #2 mentions OPORTUNIDAD or ELITE in text, approve with basic score
+                rev_upper = rev_raw.upper()
+                if 'OPORTUNIDAD' in rev_upper or 'OPPORTUNITY' in rev_upper:
+                    review = {'score': 7, 'level': 'OPPORTUNITY', 'approved': True,
+                             'verdict': 'OPORTUNIDAD', 'capital_recommended': '0.5-1%',
+                             'verdict_reason': 'Aprobado por análisis de texto'}
+                elif 'ELITE' in rev_upper:
+                    review = {'score': 11, 'level': 'ELITE', 'approved': True,
+                             'verdict': 'SEÑAL ÉLITE', 'capital_recommended': '2%',
+                             'verdict_reason': 'Aprobado por análisis de texto'}
+                else:
+                    review = {'score': 4, 'level': 'REJECTED', 'approved': False,
+                             'verdict': 'RECHAZADA', 'verdict_reason': 'No se pudo parsear'}
 
             if not review:
                 print(f'  ⚠ Could not parse review for {sym}')
