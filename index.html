@@ -747,9 +747,6 @@ function updateMarketStatus(){
 const _timers={};
 const SYMBOLS={BTC:'BTCUSDT',ETH:'ETHUSDT',SOL:'SOLUSDT'};
 
-document.getElementById('ev-date').textContent=
-  today.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
-
 /* ══════════════════════════════
    INDICATORS MATH
 ══════════════════════════════ */
@@ -1811,6 +1808,10 @@ function fmtL(text){return text.split('\n').map(l=>{const c=l.replace(/\*\*/g,''
 /* ══════════════════════════════
    INIT
 ══════════════════════════════ */
+// Set date display
+const evDateEl = document.getElementById('ev-date');
+if(evDateEl) evDateEl.textContent = today.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
+
 fetchBinanceTicker();fetchFG();calcIndicators('BTC').then(()=>updateMarketStatus());
 setInterval(fetchBinanceTicker,30000);setInterval(fetchFG,300000);
 setInterval(updateMarketStatus, 30000); // update semaphore every 30s
