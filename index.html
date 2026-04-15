@@ -398,6 +398,7 @@ footer strong{color:var(--red);}
     <div class="ind"><div class="ind-l">EMA 200</div><div class="ind-v" id="i-ema200" style="color:var(--a)">—</div><div class="ind-s" id="i-ema200-s">—</div></div>
     <div class="ind"><div class="ind-l">MACD</div><div class="ind-v" id="i-macd" style="color:var(--yel)">—</div><div class="ind-s" id="i-macd-s">—</div></div>
     <div class="ind"><div class="ind-l">FUNDING</div><div class="ind-v" id="i-fund" style="color:var(--tx)">—</div><div class="ind-s" id="i-fund-s">—</div></div>
+    <div class="ind"><div class="ind-l">OPEN INT.</div><div class="ind-v" id="i-oi" style="color:var(--tx)">—</div><div class="ind-s" id="i-oi-s">—</div></div>
   </div>
 
   <!-- Asset selector + Generate button -->
@@ -910,17 +911,83 @@ async function fetchFundingRate(symbol){
   return null;
 }
 
+async function fetchOpenInterest(symbol){
+  try{
+    // Get current OI
+    const url = `${BINANCE_F_PROXY}/openInterest?symbol=${symbol}`;
+    const r = await safeFetch(url);
+    if(!r) return null;
+    const d = await r.json();
+    const oi = parseFloat(d.openInterest);
+
+    // Get OI history (last 2 periods) to calculate change
+    const urlHist = `${BINANCE_F_PROXY}/openInterestHist?symbol=${symbol}&period=1h&limit=2`;
+    const r2 = await safeFetch(urlHist);
+    let oiChg = null;
+    if(r2){
+      const hist = await r2.json();
+      if(Array.isArray(hist) && hist.length >= 2){
+        const prev = parseFloat(hist[0].sumOpenInterest);
+        const curr = parseFloat(hist[1].sumOpenInterest);
+        oiChg = prev > 0 ? ((curr - prev) / prev * 100) : null;
+      }
+    }
+    return { oi, oiChg };
+  }catch(e){}
+  return null;
+}
+
 async function fetchFG(){
   try{
-    const r=await fetch('https://api.alternative.me/fng/?limit=1');
-    const d=await r.json(); const fg=d.data?.[0];
-    if(fg){
-      const el=document.getElementById('p-fg'),cl=document.getElementById('fg-cl');
-      el.textContent=fg.value; cl.textContent=fg.value_classification.toUpperCase();
-      el.style.color=fg.value<25?'var(--red)':fg.value<50?'var(--yel)':'var(--long)';
-      live._fg=fg;
+    // Try CoinGecko market sentiment (free, no API key)
+    const r = await fetch('https://api.coingecko.com/api/v3/global');
+    const d = await r.json();
+    const data = d.data;
+    if(data){
+      // Calculate sentiment from market data
+      const chg = data.market_cap_change_percentage_24h_usd || 0;
+      const btcDom = data.market_cap_percentage?.btc || 50;
+
+      // Derive sentiment score 0-100
+      let score = 50;
+      if(chg > 5) score = 75;
+      else if(chg > 2) score = 65;
+      else if(chg > 0) score = 55;
+      else if(chg > -2) score = 45;
+      else if(chg > -5) score = 35;
+      else score = 20;
+
+      // BTC dominance above 55% = fear (money fleeing to safety)
+      if(btcDom > 58) score -= 10;
+      else if(btcDom < 45) score += 10;
+      score = Math.max(0, Math.min(100, score));
+
+      const classification = score >= 75 ? 'EXTREME GREED' : score >= 60 ? 'GREED' :
+                            score >= 45 ? 'NEUTRAL' : score >= 25 ? 'FEAR' : 'EXTREME FEAR';
+
+      const el=document.getElementById('p-fg'), cl=document.getElementById('fg-cl');
+      if(el) el.textContent = score;
+      if(cl) cl.textContent = classification;
+      if(el) el.style.color = score<25?'var(--red)':score<50?'var(--yel)':'var(--long)';
+      live._fg = {value: score, value_classification: classification};
+      updateMarketStatus();
     }
-  }catch(e){}
+  }catch(e){
+    // Fallback to alternative.me
+    try{
+      const r2 = await fetch('https://api.alternative.me/fng/?limit=1&t='+Date.now());
+      const d2 = await r2.json();
+      const fg = d2.data?.[0];
+      if(fg){
+        const el=document.getElementById('p-fg'), cl=document.getElementById('fg-cl');
+        if(el) el.textContent = fg.value;
+        if(cl) cl.textContent = fg.value_classification.toUpperCase();
+        if(el) el.style.color = parseInt(fg.value)<25?'var(--red)':parseInt(fg.value)<50?'var(--yel)':'var(--long)';
+        live._fg = fg;
+        updateMarketStatus();
+      }
+    }catch(e2){}
+  }
 }
 
 async function calcIndicators(sym){
@@ -967,6 +1034,7 @@ async function calcIndicators(sym){
     const bb=calcBB(cl1d);
     const atr=calcATR(c1d);
     const fund=await fetchFundingRate(bin);
+    const oi=await fetchOpenInterest(bin);
     const volAvg=vols.slice(-20).reduce((a,b)=>a+b,0)/20;
     const curVol=vols[vols.length-1];
     const volRatio=curVol/volAvg;
@@ -989,6 +1057,7 @@ async function calcIndicators(sym){
       structure,
       high20d:high20d?.toFixed(2),low20d:low20d?.toFixed(2),
       high4h:high4h?.toFixed(2),low4h:low4h?.toFixed(2),
+      oi:oi?.oi, oiChg:oi?.oiChg?.toFixed(2),
     };
     updateIndStrip(sym);
     return indicators[sym];
@@ -1016,6 +1085,16 @@ function updateIndStrip(sym){
   if(ind.ema200){const e=document.getElementById('i-ema200'),s=document.getElementById('i-ema200-s');if(e&&ind.ema200&&parseFloat(ind.ema200)>0){e.textContent='$'+parseFloat(ind.ema200).toLocaleString('en-US',{maximumFractionDigits:0});e.style.color=ind.priceAboveEMA200?'var(--long)':'var(--red)';if(s)s.textContent=ind.goldenCross?'GOLDEN CROSS':'DEATH CROSS';}}
   if(ind.macd){const e=document.getElementById('i-macd'),s=document.getElementById('i-macd-s');if(e){e.textContent=ind.macd.bullish?'BULL':'BEAR';e.style.color=ind.macd.bullish?'var(--long)':'var(--red)';if(s)s.textContent=ind.macd.crossover?'CRUCE ↑':'sin cruce';}}
   if(ind.fund!==null&&ind.fund!==undefined){const e=document.getElementById('i-fund'),s=document.getElementById('i-fund-s');if(e){const fv=parseFloat(ind.fund);e.textContent=fv.toFixed(4)+'%';e.style.color=fv>0.05?'var(--red)':fv<-0.01?'var(--long)':'var(--tx)';if(s)s.textContent=fv>0.05?'LONGS PAGAN':fv<-0.01?'SHORTS PAGAN':'NEUTRO';}}
+  // OI display
+  const oiEl=document.getElementById('i-oi');
+  const oiS=document.getElementById('i-oi-s');
+  if(oiEl && ind.oi){
+    const oiB = (ind.oi/1e9).toFixed(2);
+    const chg = ind.oiChg ? parseFloat(ind.oiChg) : null;
+    oiEl.textContent = '$'+oiB+'B';
+    oiEl.style.color = chg>2?'var(--long)':chg<-2?'var(--red)':'var(--tx)';
+    if(oiS) oiS.textContent = chg!==null?(chg>=0?'+':'')+chg+'% 1h':'—';
+  }
 }
 
 async function onAssetChange(){
@@ -1072,6 +1151,7 @@ RSI:1D=${ind.rsi1d} 4H=${ind.rsi4h} 1W=${ind.rsi1w||'?'}
 EMA:21=${p(ind.ema21)} 50=${p(ind.ema50)} 200=${p(ind.ema200)} | vs50:${ind.priceAboveEMA50?'↑':'↓'} vs200:${ind.priceAboveEMA200?'↑':'↓'} | ${ind.goldenCross?'GOLDEN':'DEATH'} CROSS
 MACD:${ind.macd?`${ind.macd.line.toFixed(1)} ${ind.macd.bullish?'BULL':'BEAR'}${ind.macd.crossover?' CRUCE':''}` :'N/D'} | BB:${p(ind.bb?.upper)}/${p(ind.bb?.middle)}/${p(ind.bb?.lower)} W=${ind.bb?.width}%
 ATR:$${ind.atr||'N/D'} | Vol:${ind.volRatio}x | Fund:${ind.fund!==null?ind.fund+'%':'N/D'}
+OI:${ind.oi?(ind.oi/1e9).toFixed(2)+'B':'N/D'}${ind.oiChg?' ('+ind.oiChg+'% 1h)':''} | OI+Precio↑=tendencia fuerte | OI↓=posible reversal
 Estructura:${ind.structure}
 Res20D:${p(ind.high20d)} Sop20D:${p(ind.low20d)} | Res4H:${p(ind.high4h)} Sop4H:${p(ind.low4h)}`;
 }
@@ -1151,6 +1231,7 @@ ANÁLISIS (en orden):
 2. SMC/ICT: HH/HL o LH/LL, Order Blocks, Fair Value Gaps, zonas liquidez, BOS/CHoCH
 3. INDICADORES: RSI 1W+1D+4H (divergencias=+2 confluencias), EMA 21/50/200, MACD, Bollinger, ATR
 4. LIQUIDEZ: Funding>+0.05%=riesgo squeeze LONG, Funding<-0.01%=favor LONG, Vol ratio
+   OI (Open Interest): OI↑+precio↑=tendencia fuerte real | OI↓+precio↑=rally débil sin convicción | OI↑+precio↓=tendencia bajista fuerte | OI↓=posible reversal inminente
 5. FIBONACCI: Retrocesos 23.6/38.2/50/61.8/78.6% para entradas. Extensiones 1.272/1.618/2.618 para TPs. Fib 0.618+OB=confluencia MÁXIMA
 6. RIESGO: SL≥1.5xATR en estructura real. TP1=40%, TP2=35%, TP3=25%. Tras TP1→break-even
 
@@ -1813,7 +1894,7 @@ const evDateEl = document.getElementById('ev-date');
 if(evDateEl) evDateEl.textContent = today.toLocaleDateString('es-ES',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
 
 fetchBinanceTicker();fetchFG();calcIndicators('BTC').then(()=>updateMarketStatus());
-setInterval(fetchBinanceTicker,30000);setInterval(fetchFG,300000);
+setInterval(fetchBinanceTicker,30000);setInterval(fetchFG,30000);
 setInterval(updateMarketStatus, 30000); // update semaphore every 30s
 updateStats();
 updateKeyBtn();
