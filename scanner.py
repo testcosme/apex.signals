@@ -634,7 +634,9 @@ def scan():
             has_direction = 'LONG' in signal_text.upper() or 'SHORT' in signal_text.upper()
 
             # Log first 200 chars of response for debugging
-            print(f'  📝 IA #1 response: {signal_text[:200].replace(chr(10), " ")}')
+            print(f'  📝 IA #1 response: {signal_text[:300].replace(chr(10), " ")}')
+            # Log parsed fields
+            print(f'  📋 Parsed: entry={entry} sl={sl} tp1={tp1} rr={rr}')
 
             if is_no_signal or not has_direction:
                 print(f'  ⏳ {sym}: No signal found')
@@ -729,12 +731,25 @@ def scan():
 
                 lev     = get_field(r'APALANCAMIENTO:\s*\*{0,2}(x[23])\*{0,2}', 'x2')
                 tf      = get_field(r'TEMPORALIDAD:\s*\*{0,2}([^|\n\*]{2,30})').split('|')[0].strip() or get_field(r'TEMPORALIDAD[^:]*:\s*([^|\n]{2,20})')
-                entry   = get_field(r'ENTRADA:\s*\*{0,2}(\$?[\d,.][\d\s\-–$,.]+)')
-                sl      = get_field(r'STOP\s*LOSS:\s*\*{0,2}(\$?[\d,.]+)')
-                tp1     = get_field(r'TP1:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
-                tp2     = get_field(r'TP2:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
-                tp3     = get_field(r'TP3:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
-                rr      = get_field(r'RATIO\s*R[/\s]?B:\s*\*{0,2}(1:\d+\.?\d*)', '—') or get_field(r'R/B:\s*\*{0,2}(1:\d+\.?\d*)', '—')
+                # Entry — try multiple patterns
+                entry = get_field(r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+\s*[–\-]\s*\$?[\d,.]+)')
+                if entry == '—': entry = get_field(r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+)')
+                if entry == '—': entry = get_field(r'Entrada[^:]*:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                # SL
+                sl = get_field(r'STOP\s*LOSS:\s*\*{0,2}(\$?[\d,.]+)')
+                if sl == '—': sl = get_field(r'Stop\s*Loss[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
+                if sl == '—': sl = get_field(r'SL:\s*\*{0,2}(\$?[\d,.]+)')
+                # TPs
+                tp1 = get_field(r'TP1:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                if tp1 == '—': tp1 = get_field(r'TP\s*1[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
+                tp2 = get_field(r'TP2:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                if tp2 == '—': tp2 = get_field(r'TP\s*2[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
+                tp3 = get_field(r'TP3:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                if tp3 == '—': tp3 = get_field(r'TP\s*3[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
+                # RR
+                rr = get_field(r'RATIO\s*R[/\s]?B:\s*\*{0,2}(1:\d+\.?\d*)', '—')
+                if rr == '—': rr = get_field(r'R/?B:\s*\*{0,2}(1:\d+\.?\d*)', '—')
+                if rr == '—': rr = get_field(r'Ratio[^:]*:\s*\*{0,2}(1:\d+\.?\d*)', '—')
                 prob    = get_field(r'PROBABILIDAD:\s*\*{0,2}(\d+%?)', '—')
                 validez = get_field(r'VALIDEZ:\s*\*{0,2}(\d+\s*h[^\n]*)', '—') or get_field(r'V[AÁ]LID[AO]:\s*\*{0,2}(\d+[^\n]{0,20})', '—')
                 inval   = get_field(r'NO ENTRAR SI:\s*\*{0,2}([^\n\*]{5,})', '—')
