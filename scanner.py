@@ -735,32 +735,41 @@ def scan():
                 rr = '—'; prob = '—'; validez = '—'; inval = '—'
 
                 # Entry
-                for pat in [r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+\s*[–\-]\s*\$?[\d,.]+)', r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+)', r'Zona de entrada[^:]*:\s*(\$?[\d,.]+[^\n]*)']:
+                for pat in [
+                    r'\*{0,2}ENTRADA:\*{0,2}\s*\*{0,2}(\$?[\d,.]+\s*[–\-]\s*\$?[\d,.]+)',
+                    r'\*{0,2}ENTRADA:\*{0,2}\s*\*{0,2}(\$?[\d,.]+)',
+                    r'ENTRADA[^:]*:\s*\$?([\d,.]+\s*[–\-]\s*\$?[\d,.]+)',
+                    r'ENTRADA[^:]*:\s*\$?([\d,.]+)',
+                ]:
                     v = get_field(pat)
                     if v != '—': entry = v; break
                 # SL
-                for pat in [r'STOP\s*LOSS:\s*\*{0,2}(\$?[\d,.]+)', r'SL:\s*\*{0,2}(\$?[\d,.]+)']:
+                for pat in [
+                    r'\*{0,2}STOP\s*LOSS:\*{0,2}\s*\*{0,2}(\$?[\d,.]+)',
+                    r'STOP\s*LOSS[^:]*:\s*\$?([\d,.]+)',
+                    r'\*{0,2}SL:\*{0,2}\s*\*{0,2}(\$?[\d,.]+)',
+                ]:
                     v = get_field(pat)
                     if v != '—': sl = v; break
                 # TPs
-                for pat in [r'TP1:\s*\*{0,2}(\$?[\d,.]+[^\n]*)', r'TP\s*1[^:]*:\s*(\$?[\d,.]+)']:
+                for pat in [r'\*{0,2}TP1:\*{0,2}\s*\*{0,2}(\$?[\d,.]+)', r'TP1[^:]*:\s*\$?([\d,.]+)']:
                     v = get_field(pat)
                     if v != '—': tp1 = v; break
-                for pat in [r'TP2:\s*\*{0,2}(\$?[\d,.]+[^\n]*)', r'TP\s*2[^:]*:\s*(\$?[\d,.]+)']:
+                for pat in [r'\*{0,2}TP2:\*{0,2}\s*\*{0,2}(\$?[\d,.]+)', r'TP2[^:]*:\s*\$?([\d,.]+)']:
                     v = get_field(pat)
                     if v != '—': tp2 = v; break
-                for pat in [r'TP3:\s*\*{0,2}(\$?[\d,.]+[^\n]*)', r'TP\s*3[^:]*:\s*(\$?[\d,.]+)']:
+                for pat in [r'\*{0,2}TP3:\*{0,2}\s*\*{0,2}(\$?[\d,.]+)', r'TP3[^:]*:\s*\$?([\d,.]+)']:
                     v = get_field(pat)
                     if v != '—': tp3 = v; break
                 # RR
-                for pat in [r'RATIO\s*R[/\s]?B:\s*\*{0,2}(1:\d+\.?\d*)', r'R/?B:\s*(1:\d+\.?\d*)']:
+                for pat in [r'RATIO\s*R[/\s]?B[^:]*:\s*\*{0,2}(1:\d+\.?\d*)', r'R/?B[^:]*:\s*(1:\d+\.?\d*)']:
                     v = get_field(pat)
                     if v != '—': rr = v; break
-                prob = get_field(r'PROBABILIDAD:\s*\*{0,2}(\d+%?)', '—')
-                for pat in [r'VALIDEZ:\s*\*{0,2}(\d+\s*h[^\n]*)', r'V[AÁ]LID[AO]:\s*(\d+[^\n]{0,20})']:
+                prob = get_field(r'PROBABILIDAD[^:]*:\s*\*{0,2}(\d+%?)', '—')
+                for pat in [r'VALIDEZ[^:]*:\s*\*{0,2}(\d+\s*h[^\n]*)', r'V[AÁ]LID[AO][^:]*:\s*(\d+[^\n]{0,20})']:
                     v = get_field(pat)
                     if v != '—': validez = v; break
-                inval = get_field(r'NO ENTRAR SI:\s*\*{0,2}([^\n\*]{5,})', '—')
+                inval = get_field(r'NO ENTRAR SI[^:]*:\s*\*{0,2}([^\n\*]{5,})', '—')
                 print(f'  📋 Parsed: entry={entry} sl={sl} tp1={tp1} rr={rr}')
 
                 dir_emoji = '🟢' if direction == 'LONG' else '🔴'
