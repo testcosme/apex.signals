@@ -440,9 +440,25 @@ footer strong{color:var(--red);}
     <button id="tg-test" onclick="tgTest()" style="width:100%;background:transparent;border:1px solid var(--a2);color:var(--a2);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:12px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(0,255,157,.1)'" onmouseout="this.style.background='transparent'">
       🔔 ENVIAR MENSAJE DE PRUEBA
     </button>
+    <button onclick="sendPerformance()" style="width:100%;background:transparent;border:1px solid var(--a3);color:var(--a3);font-family:var(--head);font-size:12px;letter-spacing:2px;padding:12px;border-radius:3px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(124,92,255,.1)'" onmouseout="this.style.background='transparent'">
+      📊 ENVIAR PERFORMANCE A TELEGRAM
+    </button>
     <a href="https://github.com/testcosme/apex.signals/actions" target="_blank" style="display:block;text-align:center;color:var(--a);font-family:var(--head);font-size:10px;letter-spacing:2px;text-decoration:none;border:1px solid rgba(0,229,255,.3);padding:10px;border-radius:3px;">
       🔗 VER GITHUB ACTIONS
     </a>
+  </div>
+</div>
+
+<!-- PERFORMANCE SECTION -->
+<div style="background:var(--s1);border:1px solid var(--bd2);border-radius:4px;padding:14px;margin-bottom:12px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--txb);">📈 PERFORMANCE EN VIVO</div>
+    <button onclick="loadPerformance()" style="background:transparent;border:1px solid var(--a3);color:var(--a3);font-family:var(--head);font-size:8px;letter-spacing:2px;padding:5px 12px;border-radius:2px;cursor:pointer;" onmouseover="this.style.background='rgba(124,92,255,.1)'" onmouseout="this.style.background='transparent'">
+      ↻ ACTUALIZAR
+    </button>
+  </div>
+  <div id="perf-out" style="font-size:10px;color:var(--txd);">
+    Presiona <strong style="color:var(--a3)">ACTUALIZAR</strong> para ver el rendimiento.
   </div>
 </div>
 
@@ -524,8 +540,89 @@ let live={}, indicators={}, tracker=JSON.parse(localStorage.getItem('apex6_track
 let newsCtx='', newsLoaded=false, newsLoadedDate='';
 
 /* ══════════════════════════════
-   MARKET BRIEF — Simple AI Analysis
+   PERFORMANCE TRACKER
 ══════════════════════════════ */
+async function loadPerformance(){
+  const out = document.getElementById('perf-out');
+  if(!out) return;
+  out.innerHTML = '<span style="color:var(--a3)">Cargando...</span>';
+  try{
+    const r = await fetch('https://raw.githubusercontent.com/testcosme/apex.signals/main/signals_log.json?t='+Date.now());
+    if(!r.ok) throw new Error('No hay señales registradas aún');
+    const logs = await r.json();
+    if(!logs.length){ out.innerHTML='<span style="color:var(--txd)">Sin señales registradas aún</span>'; return; }
+
+    const total = logs.length;
+    const closed = logs.filter(s=>s.result !== 'ACTIVE');
+    const wins = closed.filter(s=>s.result !== 'SL');
+    const losses = closed.filter(s=>s.result === 'SL');
+    const active = logs.filter(s=>s.result === 'ACTIVE');
+    const winRate = closed.length ? Math.round(wins.length/closed.length*100) : 0;
+    const totalPnl = closed.reduce((acc,s)=>acc+(s.pnl_pct||0), 0).toFixed(1);
+    const avgRR = wins.length ? (wins.reduce((acc,s)=>acc+(s.pnl_pct||0),0)/wins.length).toFixed(1) : 0;
+
+    const wrColor = winRate >= 65 ? 'var(--long)' : winRate >= 50 ? 'var(--yel)' : 'var(--red)';
+    const pnlColor = parseFloat(totalPnl) >= 0 ? 'var(--long)' : 'var(--red)';
+    const lastSigs = logs.slice(-3).map(s=>{
+      const c = s.result==='SL'?'var(--red)':s.result==='ACTIVE'?'var(--yel)':'var(--long)';
+      return '<span style="color:'+c+'">'+s.asset+' '+s.direction+' '+s.result+'</span>';
+    }).join(' · ');
+
+    out.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:8px;">
+          <div style="font-size:7px;color:var(--txd);letter-spacing:2px;">WIN RATE</div>
+          <div style="font-family:var(--head);font-size:20px;color:${wrColor}">${closed.length ? winRate+'%' : '—'}</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:8px;">
+          <div style="font-size:7px;color:var(--txd);letter-spacing:2px;">P&L TOTAL</div>
+          <div style="font-family:var(--head);font-size:20px;color:${pnlColor}">${parseFloat(totalPnl)>=0?'+':''}${totalPnl}%</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:8px;">
+          <div style="font-size:7px;color:var(--txd);letter-spacing:2px;">SEÑALES</div>
+          <div style="font-family:var(--head);font-size:14px;color:var(--txb)">${total} total</div>
+          <div style="font-size:8px;color:var(--txd)">${active.length} activas</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:3px;padding:8px;">
+          <div style="font-size:7px;color:var(--txd);letter-spacing:2px;">WIN/LOSS</div>
+          <div style="font-family:var(--head);font-size:14px;"><span style="color:var(--long)">${wins.length}W</span> / <span style="color:var(--red)">${losses.length}L</span></div>
+        </div>
+      </div>
+      <div style="font-size:8px;color:var(--txd);">Últimas: ${lastSigs}</div>`;
+  }catch(e){
+    out.innerHTML = `<span style="color:var(--txd)">Sin señales registradas aún — aparecerán cuando llegue la primera señal</span>`;
+  }
+}
+
+async function sendPerformance(){
+  try{
+    const r = await fetch('https://raw.githubusercontent.com/testcosme/apex.signals/main/signals_log.json?t='+Date.now());
+    if(!r.ok) throw new Error('No data');
+    const logs = await r.json();
+    const total = logs.length;
+    const closed = logs.filter(s=>s.result!=='ACTIVE');
+    const wins = closed.filter(s=>s.result!=='SL');
+    const losses = closed.filter(s=>s.result==='SL');
+    const active = logs.filter(s=>s.result==='ACTIVE');
+    const winRate = closed.length ? Math.round(wins.length/closed.length*100) : 0;
+    const totalPnl = closed.reduce((acc,s)=>acc+(s.pnl_pct||0),0).toFixed(1);
+
+    const msg = `📊 *APEX SIGNALS — PERFORMANCE*\n\n🎯 Win Rate: ${winRate}%\n📈 P&L Total: ${parseFloat(totalPnl)>=0?'+':''}${totalPnl}%\n\n✅ Wins: ${wins.length}\n❌ Losses: ${losses.length}\n⚡ Activas: ${active.length}\n📊 Total señales: ${total}\n\n⏰ ${new Date().toLocaleString('es-ES')}`;
+
+    const key = getKey();
+    if(!key){ alert('Configura tu API key primero'); return; }
+
+    const tgToken = '8649338480:AAHXj2O4Uy-CTpuV1-zotA91XuQXRp78JHs';
+    const tgChat  = '7130790427';
+    await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:tgChat, text:msg, parse_mode:'Markdown'})
+    });
+    alert('✅ Performance enviado a Telegram');
+  }catch(e){
+    alert('Sin señales registradas aún');
+  }
+}
 async function genMarketBrief(){
   const btn = document.getElementById('btn-brief');
   const out = document.getElementById('brief-out');
