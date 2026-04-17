@@ -729,30 +729,41 @@ def scan():
                     elif 'SHORT' in signal_text.upper():
                         direction = 'SHORT'
 
-                lev     = get_field(r'APALANCAMIENTO:\s*\*{0,2}(x[23])\*{0,2}', 'x2')
-                tf      = get_field(r'TEMPORALIDAD:\s*\*{0,2}([^|\n\*]{2,30})').split('|')[0].strip() or get_field(r'TEMPORALIDAD[^:]*:\s*([^|\n]{2,20})')
-                # Entry — try multiple patterns
-                entry = get_field(r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+\s*[–\-]\s*\$?[\d,.]+)')
-                if entry == '—': entry = get_field(r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+)')
-                if entry == '—': entry = get_field(r'Entrada[^:]*:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                lev = get_field(r'APALANCAMIENTO:\s*\*{0,2}(x[23])\*{0,2}', 'x2')
+                tf = get_field(r'TEMPORALIDAD:\s*\*{0,2}([^|\n\*]{2,30})').split('|')[0].strip() or get_field(r'TEMPORALIDAD[^:]*:\s*([^|\n]{2,20})')
+
+                # Initialize all with safe defaults
+                entry = '—'; sl = '—'; tp1 = '—'; tp2 = '—'; tp3 = '—'
+                rr = '—'; prob = '—'; validez = '—'; inval = '—'
+
+                # Entry
+                for pat in [r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+\s*[–\-]\s*\$?[\d,.]+)', r'ENTRADA:\s*\*{0,2}(\$?[\d,.]+)', r'Zona de entrada[^:]*:\s*(\$?[\d,.]+[^\n]*)']:
+                    v = get_field(pat)
+                    if v != '—': entry = v; break
                 # SL
-                sl = get_field(r'STOP\s*LOSS:\s*\*{0,2}(\$?[\d,.]+)')
-                if sl == '—': sl = get_field(r'Stop\s*Loss[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
-                if sl == '—': sl = get_field(r'SL:\s*\*{0,2}(\$?[\d,.]+)')
+                for pat in [r'STOP\s*LOSS:\s*\*{0,2}(\$?[\d,.]+)', r'SL:\s*\*{0,2}(\$?[\d,.]+)']:
+                    v = get_field(pat)
+                    if v != '—': sl = v; break
                 # TPs
-                tp1 = get_field(r'TP1:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
-                if tp1 == '—': tp1 = get_field(r'TP\s*1[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
-                tp2 = get_field(r'TP2:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
-                if tp2 == '—': tp2 = get_field(r'TP\s*2[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
-                tp3 = get_field(r'TP3:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
-                if tp3 == '—': tp3 = get_field(r'TP\s*3[^:]*:\s*\*{0,2}(\$?[\d,.]+)')
+                for pat in [r'TP1:\s*\*{0,2}(\$?[\d,.]+[^\n]*)', r'TP\s*1[^:]*:\s*(\$?[\d,.]+)']:
+                    v = get_field(pat)
+                    if v != '—': tp1 = v; break
+                for pat in [r'TP2:\s*\*{0,2}(\$?[\d,.]+[^\n]*)', r'TP\s*2[^:]*:\s*(\$?[\d,.]+)']:
+                    v = get_field(pat)
+                    if v != '—': tp2 = v; break
+                for pat in [r'TP3:\s*\*{0,2}(\$?[\d,.]+[^\n]*)', r'TP\s*3[^:]*:\s*(\$?[\d,.]+)']:
+                    v = get_field(pat)
+                    if v != '—': tp3 = v; break
                 # RR
-                rr = get_field(r'RATIO\s*R[/\s]?B:\s*\*{0,2}(1:\d+\.?\d*)', '—')
-                if rr == '—': rr = get_field(r'R/?B:\s*\*{0,2}(1:\d+\.?\d*)', '—')
-                if rr == '—': rr = get_field(r'Ratio[^:]*:\s*\*{0,2}(1:\d+\.?\d*)', '—')
-                prob    = get_field(r'PROBABILIDAD:\s*\*{0,2}(\d+%?)', '—')
-                validez = get_field(r'VALIDEZ:\s*\*{0,2}(\d+\s*h[^\n]*)', '—') or get_field(r'V[AÁ]LID[AO]:\s*\*{0,2}(\d+[^\n]{0,20})', '—')
-                inval   = get_field(r'NO ENTRAR SI:\s*\*{0,2}([^\n\*]{5,})', '—')
+                for pat in [r'RATIO\s*R[/\s]?B:\s*\*{0,2}(1:\d+\.?\d*)', r'R/?B:\s*(1:\d+\.?\d*)']:
+                    v = get_field(pat)
+                    if v != '—': rr = v; break
+                prob = get_field(r'PROBABILIDAD:\s*\*{0,2}(\d+%?)', '—')
+                for pat in [r'VALIDEZ:\s*\*{0,2}(\d+\s*h[^\n]*)', r'V[AÁ]LID[AO]:\s*(\d+[^\n]{0,20})']:
+                    v = get_field(pat)
+                    if v != '—': validez = v; break
+                inval = get_field(r'NO ENTRAR SI:\s*\*{0,2}([^\n\*]{5,})', '—')
+                print(f'  📋 Parsed: entry={entry} sl={sl} tp1={tp1} rr={rr}')
 
                 dir_emoji = '🟢' if direction == 'LONG' else '🔴'
                 arrow     = '↑' if direction == 'LONG' else '↓'
