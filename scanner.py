@@ -635,8 +635,6 @@ def scan():
 
             # Log first 200 chars of response for debugging
             print(f'  📝 IA #1 response: {signal_text[:300].replace(chr(10), " ")}')
-            # Log parsed fields
-            print(f'  📋 Parsed: entry={entry} sl={sl} tp1={tp1} rr={rr}')
 
             if is_no_signal or not has_direction:
                 print(f'  ⏳ {sym}: No signal found')
