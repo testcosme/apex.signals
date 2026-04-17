@@ -829,6 +829,50 @@ def scan():
 
                 ok = tg_send(tg_msg)
                 print(f'  📱 Telegram sent: {ok}')
+
+                # ── LOG SIGNAL FOR TRACKER ──
+                try:
+                    log_file = 'signals_log.json'
+                    logs = []
+                    if os.path.exists(log_file):
+                        with open(log_file, 'r') as f:
+                            logs = json.load(f)
+
+                    # Extract numeric prices for tracking
+                    def extract_price(text):
+                        nums = re.findall(r'\$?([\d,]+(?:\.\d+)?)', str(text).replace(',',''))
+                        prices = [float(x.replace(',','')) for x in nums if float(x.replace(',','')) > 100]
+                        return prices[0] if prices else 0
+
+                    signal_log = {
+                        'id': datetime.utcnow().strftime('%Y%m%d%H%M%S') + sym,
+                        'date': now,
+                        'asset': sym,
+                        'direction': direction,
+                        'level': level_emoji,
+                        'score': score,
+                        'entry_low': extract_price(entry.split('–')[0] if '–' in entry else entry.split('-')[0] if '-' in entry else entry),
+                        'entry_high': extract_price(entry.split('–')[-1] if '–' in entry else entry.split('-')[-1] if '-' in entry else entry),
+                        'sl': extract_price(sl),
+                        'tp1': extract_price(tp1),
+                        'tp2': extract_price(tp2),
+                        'tp3': extract_price(tp3),
+                        'rr': rr,
+                        'prob': prob,
+                        'result': 'ACTIVE',
+                        'exit_price': 0,
+                        'pnl_pct': 0
+                    }
+                    logs.append(signal_log)
+
+                    # Keep only last 50 signals
+                    logs = logs[-50:]
+
+                    with open(log_file, 'w') as f:
+                        json.dump(logs, f, indent=2)
+                    print(f'  📝 Signal logged to {log_file}')
+                except Exception as e:
+                    print(f'  ⚠ Could not log signal: {e}')
             else:
                 print(f'  🛑 {sym}: Signal rejected (score {score}/14)')
 
@@ -851,6 +895,72 @@ def scan():
         print(f'\n⏳ No signals this scan — market not ready')
     else:
         print(f'\n✅ {signals_found} signal(s) sent to Telegram')
+
+    # ── MONITOR ACTIVE SIGNALS ──
+    try:
+        log_file = 'signals_log.json'
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                logs = json.load(f)
+
+            updated = False
+            for sig in logs:
+                if sig.get('result') != 'ACTIVE':
+                    continue
+
+                asset = sig.get('asset', 'BTC')
+                curr_price = prices.get(asset, {}).get('price', 0)
+                if not curr_price:
+                    continue
+
+                direction = sig.get('direction', 'LONG')
+                sl = sig.get('sl', 0)
+                tp1 = sig.get('tp1', 0)
+                tp2 = sig.get('tp2', 0)
+                tp3 = sig.get('tp3', 0)
+                entry = (sig.get('entry_low', 0) + sig.get('entry_high', 0)) / 2 or sig.get('entry_low', 0)
+
+                result = None
+                if direction == 'LONG':
+                    if sl and curr_price <= sl:
+                        result = 'SL'
+                        pnl = round((curr_price - entry) / entry * 100 * 2, 2) if entry else 0
+                    elif tp3 and curr_price >= tp3:
+                        result = 'TP3'
+                        pnl = round((tp3 - entry) / entry * 100 * 2, 2) if entry else 0
+                    elif tp2 and curr_price >= tp2:
+                        result = 'TP2'
+                        pnl = round((tp2 - entry) / entry * 100 * 2, 2) if entry else 0
+                    elif tp1 and curr_price >= tp1:
+                        result = 'TP1'
+                        pnl = round((tp1 - entry) / entry * 100 * 2, 2) if entry else 0
+                else:  # SHORT
+                    if sl and curr_price >= sl:
+                        result = 'SL'
+                        pnl = round((entry - curr_price) / entry * 100 * 2, 2) if entry else 0
+                    elif tp3 and curr_price <= tp3:
+                        result = 'TP3'
+                        pnl = round((entry - tp3) / entry * 100 * 2, 2) if entry else 0
+                    elif tp2 and curr_price <= tp2:
+                        result = 'TP2'
+                        pnl = round((entry - tp2) / entry * 100 * 2, 2) if entry else 0
+                    elif tp1 and curr_price <= tp1:
+                        result = 'TP1'
+                        pnl = round((entry - tp1) / entry * 100 * 2, 2) if entry else 0
+
+                if result:
+                    sig['result'] = result
+                    sig['exit_price'] = curr_price
+                    sig['pnl_pct'] = pnl
+                    updated = True
+                    emoji = '✅' if result != 'SL' else '❌'
+                    print(f'  {emoji} {asset} signal updated: {result} ({pnl:+.1f}%)')
+
+            if updated:
+                with open(log_file, 'w') as f:
+                    json.dump(logs, f, indent=2)
+    except Exception as e:
+        print(f'  ⚠ Signal monitor error: {e}')
 
     # ── DAILY SUMMARY — sent at 10:00 UTC, NO API cost ──
     current_hour = datetime.utcnow().hour
