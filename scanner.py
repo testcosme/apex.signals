@@ -230,6 +230,67 @@ def detect_structure(closes):
             return 'LH/LL — TENDENCIA BAJISTA'
     return 'Rango / indefinido'
 
+def detect_rsi_divergence(closes, period=14, lookback=20):
+    """
+    Detect RSI divergences mathematically.
+    Returns: string describing divergence or 'Sin divergencia'
+    """
+    if len(closes) < period + lookback:
+        return 'Sin divergencia'
+    try:
+        # Calculate RSI for recent candles
+        rsi_values = []
+        for i in range(lookback):
+            idx = len(closes) - lookback + i
+            if idx >= period:
+                rsi = calc_rsi(closes[:idx+1], period)
+                if rsi:
+                    rsi_values.append((closes[idx], rsi))
+
+        if len(rsi_values) < 6:
+            return 'Sin divergencia'
+
+        # Find recent price highs and lows
+        prices = [x[0] for x in rsi_values]
+        rsis   = [x[1] for x in rsi_values]
+
+        # Check last 2 swing points
+        mid = len(prices) // 2
+        price_first_half = prices[:mid]
+        price_second_half = prices[mid:]
+        rsi_first_half = rsis[:mid]
+        rsi_second_half = rsis[mid:]
+
+        price_high1 = max(price_first_half)
+        price_high2 = max(price_second_half)
+        price_low1  = min(price_first_half)
+        price_low2  = min(price_second_half)
+
+        rsi_at_high1 = rsi_first_half[price_first_half.index(price_high1)]
+        rsi_at_high2 = rsi_second_half[price_second_half.index(price_high2)]
+        rsi_at_low1  = rsi_first_half[price_first_half.index(price_low1)]
+        rsi_at_low2  = rsi_second_half[price_second_half.index(price_low2)]
+
+        # Bearish divergence: price makes HH but RSI makes LH
+        if price_high2 > price_high1 and rsi_at_high2 < rsi_at_high1 - 3:
+            return f'⚠️ DIVERGENCIA BAJISTA REGULAR — precio HH (${price_high2:,.0f}>${price_high1:,.0f}) pero RSI LH ({rsi_at_high2:.1f}<{rsi_at_high1:.1f}) → señal de reversión bajista'
+
+        # Bullish divergence: price makes LL but RSI makes HL
+        if price_low2 < price_low1 and rsi_at_low2 > rsi_at_low1 + 3:
+            return f'✅ DIVERGENCIA ALCISTA REGULAR — precio LL (${price_low2:,.0f}<${price_low1:,.0f}) pero RSI HL ({rsi_at_low2:.1f}>{rsi_at_low1:.1f}) → señal de reversión alcista'
+
+        # Hidden bullish: price HL but RSI LL
+        if price_low2 > price_low1 and rsi_at_low2 < rsi_at_low1 - 3:
+            return f'✅ DIVERGENCIA ALCISTA OCULTA — continuación alcista probable'
+
+        # Hidden bearish: price LH but RSI HH
+        if price_high2 < price_high1 and rsi_at_high2 > rsi_at_high1 + 3:
+            return f'⚠️ DIVERGENCIA BAJISTA OCULTA — continuación bajista probable'
+
+    except:
+        pass
+    return 'Sin divergencia RSI detectada'
+
 def get_indicators(symbol):
     print(f'  Calculating indicators for {symbol}...')
     c1d = get_candles(symbol, '1d', 220)
@@ -255,6 +316,10 @@ def get_indicators(symbol):
     fund = get_funding(symbol)
     oi = get_open_interest(symbol)
 
+    # RSI Divergences — mathematical calculation
+    div_1d = detect_rsi_divergence(closes_1d)
+    div_4h = detect_rsi_divergence(closes_4h) if closes_4h else 'Sin divergencia'
+
     high20d = max(c['high'] for c in c1d[-20:])
     low20d  = min(c['low']  for c in c1d[-20:])
 
@@ -275,6 +340,8 @@ def get_indicators(symbol):
         'vol_ratio': vol_ratio,
         'fund':    fund,
         'oi':      oi,
+        'div_1d':  div_1d,
+        'div_4h':  div_4h,
         'struct':  detect_structure(closes_1d),
         'high20d': high20d,
         'low20d':  low20d,
@@ -300,6 +367,8 @@ ATR 14D: ${ind['atr'] or 'N/D'}
 Volumen ratio vs promedio 20D: {ind['vol_ratio'] or 'N/D'}x
 Funding Rate: {str(ind['fund'])+'%' if ind['fund'] is not None else 'N/D'}
 Open Interest: {str(ind['oi'])+'B USD' if ind.get('oi') else 'N/D'} (OI↑+precio↑=tendencia real | OI↓+precio↑=rally falso)
+Divergencia RSI 1D: {ind.get('div_1d', 'Sin divergencia')}
+Divergencia RSI 4H: {ind.get('div_4h', 'Sin divergencia')}
 Estructura: {ind['struct']}
 Resistencia 20D: {fmt(ind['high20d'])} | Soporte 20D: {fmt(ind['low20d'])}"""
 
@@ -659,16 +728,16 @@ def scan():
                         direction = 'SHORT'
 
                 lev     = get_field(r'APALANCAMIENTO:\s*\*{0,2}(x[23])\*{0,2}', 'x2')
-                tf      = get_field(r'TEMPORALIDAD:\s*\*{0,2}([^\|\n\*]+)').split('|')[0].strip()
-                entry   = get_field(r'ENTRADA:\s*\*{0,2}([^\n\*]+)')
-                sl      = get_field(r'STOP\s*LOSS:\s*\*{0,2}([^\n\*]+)')
-                tp1     = get_field(r'TP1:\s*\*{0,2}([^\n\*]+)')
-                tp2     = get_field(r'TP2:\s*\*{0,2}([^\n\*]+)')
-                tp3     = get_field(r'TP3:\s*\*{0,2}([^\n\*]+)')
-                rr      = get_field(r'RATIO\s+R/B:\s*\*{0,2}([^\n\*]+)')
-                prob    = get_field(r'PROBABILIDAD:\s*\*{0,2}([^\n\*]+)')
-                validez = get_field(r'VALIDEZ:\s*\*{0,2}([^\n\*]+)')
-                inval   = get_field(r'NO ENTRAR SI:\s*\*{0,2}([^\n\*]+)')
+                tf      = get_field(r'TEMPORALIDAD:\s*\*{0,2}([^|\n\*]{2,30})').split('|')[0].strip() or get_field(r'TEMPORALIDAD[^:]*:\s*([^|\n]{2,20})')
+                entry   = get_field(r'ENTRADA:\s*\*{0,2}(\$?[\d,.][\d\s\-–$,.]+)')
+                sl      = get_field(r'STOP\s*LOSS:\s*\*{0,2}(\$?[\d,.]+)')
+                tp1     = get_field(r'TP1:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                tp2     = get_field(r'TP2:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                tp3     = get_field(r'TP3:\s*\*{0,2}(\$?[\d,.]+[^\n]*)')
+                rr      = get_field(r'RATIO\s*R[/\s]?B:\s*\*{0,2}(1:\d+\.?\d*)', '—') or get_field(r'R/B:\s*\*{0,2}(1:\d+\.?\d*)', '—')
+                prob    = get_field(r'PROBABILIDAD:\s*\*{0,2}(\d+%?)', '—')
+                validez = get_field(r'VALIDEZ:\s*\*{0,2}(\d+\s*h[^\n]*)', '—') or get_field(r'V[AÁ]LID[AO]:\s*\*{0,2}(\d+[^\n]{0,20})', '—')
+                inval   = get_field(r'NO ENTRAR SI:\s*\*{0,2}([^\n\*]{5,})', '—')
 
                 dir_emoji = '🟢' if direction == 'LONG' else '🔴'
                 arrow     = '↑' if direction == 'LONG' else '↓'
